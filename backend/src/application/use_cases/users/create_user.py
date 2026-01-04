@@ -43,6 +43,6 @@ class CreateUserUseCase:
       )
 
       # Persist user entity
-      self.uow.users.create_user(new_user)
-      return UserResponseDTO.model_validate(new_user)
+      created_user = self.uow.users.create_user(new_user)
+      return UserResponseDTO.model_validate(created_user.to_dict())
 

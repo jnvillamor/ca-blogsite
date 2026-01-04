@@ -1,4 +1,10 @@
-from src.domain.value_objects import FirstName, LastName, Username
+from src.domain.value_objects import (
+  FirstName,
+  LastName,
+  Username,
+  Password
+)
+from datetime import datetime, timezone
 from typing import Optional
 
 class UserEntity:
@@ -17,7 +23,7 @@ class UserEntity:
     self.first_name = FirstName(first_name) 
     self.last_name = LastName(last_name) 
     self.username = Username(username)
-    self.password = password
+    self.password = Password(password) 
     self.avatar = avatar
-    self.created_at = created_at
-    self.updated_at = updated_at
+    self.created_at = created_at or datetime.now(timezone.utc).isoformat()
+    self.updated_at = updated_at or datetime.now(timezone.utc).isoformat()

@@ -1,0 +1,138 @@
+import pytest
+from src.application.dto import PaginationDTO, UserResponseDTO
+from src.application.use_cases.users import GetUserUseCase
+from src.application.repositories import IUserRepository
+from src.domain.entities import UserEntity
+
+class TestGetUserUseCase:
+  @pytest.fixture
+  def user_repository(self, mocker):
+    user_repository = mocker.Mock()
+    return user_repository
+  
+  @pytest.fixture
+  def use_case(self, user_repository) -> GetUserUseCase:
+    return GetUserUseCase(user_repository=user_repository)
+  
+  @pytest.fixture
+  def valid_user_data(self) -> UserEntity:
+    return UserEntity(
+      id='123',
+      first_name='John',
+      last_name='Doe',
+      username='johndoe',
+      password='hashedpassword',
+      avatar='',
+      created_at='2024-01-01T00:00:00Z',
+      updated_at='2024-01-01T00:00:00Z'
+    )
+  
+  @pytest.fixture
+  def valid_users_list(self) -> list[UserEntity]:
+    return [
+      UserEntity(
+        id='123',
+        first_name='John',
+        last_name='Doe',
+        username='johndoe',
+        password='hashedpassword',
+        avatar='',
+        created_at='2024-01-01T00:00:00Z',
+        updated_at='2024-01-01T00:00:00Z'
+      ),
+      UserEntity(
+        id='124',
+        first_name='Jane',
+        last_name='Smith',
+        username='janesmith',
+        password='hashedpassword2',
+        avatar='',
+        created_at='2024-01-02T00:00:00Z',
+        updated_at='2024-01-02T00:00:00Z'
+      )
+    ]
+    
+  def test_get_by_id_success(
+    self, 
+    use_case: GetUserUseCase, 
+    user_repository: IUserRepository, 
+    valid_user_data: UserEntity
+  ):
+    # Arrange
+    user_repository.get_user_by_id.return_value = valid_user_data
+    
+    # Act
+    result = use_case.get_by_id('123')
+
+    # Assert
+    assert result == UserResponseDTO.model_validate(valid_user_data.to_dict())
+    user_repository.get_user_by_id.assert_called_once_with('123')
+    
+  def test_get_by_id_not_found(
+    self, 
+    use_case: GetUserUseCase, 
+    user_repository: IUserRepository
+  ):
+    # Arrange
+    user_repository.get_user_by_id.return_value = None
+    
+    # Act
+    result = use_case.get_by_id('999')
+
+    # Assert
+    assert result is None
+    user_repository.get_user_by_id.assert_called_once_with('999')
+    
+  def test_get_by_username_success(
+    self,
+    use_case: GetUserUseCase,
+    user_repository: IUserRepository,
+    valid_user_data: UserEntity
+  ):
+    # Arrange
+    user_repository.get_user_by_username.return_value = valid_user_data
+
+    # Act
+    result = use_case.get_by_username('johndoe')
+    
+    # Assert
+    assert result == UserResponseDTO.model_validate(valid_user_data.to_dict())
+    user_repository.get_user_by_username.assert_called_once_with('johndoe')
+  
+  def test_by_username_not_found(
+    self,
+    use_case: GetUserUseCase,
+    user_repository: IUserRepository
+  ):
+    # Arrange
+    user_repository.get_user_by_username.return_value = None
+
+    # Act
+    result = use_case.get_by_username('unknownuser')
+    
+    # Assert
+    assert result is None
+    user_repository.get_user_by_username.assert_called_once_with('unknownuser')
+  
+  def test_get_all_users(
+    self,
+    use_case: GetUserUseCase,
+    user_repository: IUserRepository,
+    valid_users_list: list[UserEntity]
+  ):
+    # Arrange
+    pagination = PaginationDTO(skip=0, limit=10, search=None)
+    user_repository.get_all_users.return_value = (valid_users_list, len(valid_users_list))
+    
+    # Act
+    result, count = use_case.get_all_users(pagination)
+    
+    # Assert
+    expected_dtos = [UserResponseDTO.model_validate(user.to_dict()) for user in valid_users_list]
+    assert result == expected_dtos
+    assert count == len(valid_users_list)
+    user_repository.get_all_users.assert_called_once_with(
+      skip=pagination.skip,
+      limit=pagination.limit,
+      search=pagination.search
+    )

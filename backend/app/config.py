@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Configurations(BaseSettings):
-  APP_NAME: str = "Clean Architecture Blogsite",
+  APP_NAME: str = "Clean Architecture Blogsite"
   DATABASE_URL: str = "sqlite+aiosqlite:///./test.db"
   DEBUG: bool = True
   DB_ECHO: bool = False

@@ -1,6 +1,7 @@
 pydantic
 pytest
 pytest-mock
+pydantic_settings
 fastapi
 slowapi
 uvicorn

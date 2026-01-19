@@ -1,6 +1,8 @@
 pydantic
 pytest
 pytest-mock
+pytest-asyncio
+aiosqlite
 pydantic_settings
 fastapi
 slowapi

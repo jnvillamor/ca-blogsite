@@ -19,54 +19,79 @@ class UserEntity:
     created_at: Optional[str] = None,
     updated_at: Optional[str] = None
   ):
-    self.id = id
-    self.first_name = FirstName(first_name) 
-    self.last_name = LastName(last_name) 
-    self.username = Username(username)
-    self.password = Password(password) 
-    self.avatar = avatar
-    self.created_at = created_at or datetime.now(timezone.utc).isoformat()
-    self.updated_at = updated_at or datetime.now(timezone.utc).isoformat()
+    self.__id = id
+    self.__first_name = FirstName(first_name) 
+    self.__last_name = LastName(last_name) 
+    self.__username = Username(username)
+    self.__password = Password(password) 
+    self.__avatar = avatar
+    self.__created_at = created_at or datetime.now(timezone.utc).isoformat()
+    self.__updated_at = updated_at or datetime.now(timezone.utc).isoformat()
   
-  def set_first_name(self, value: str):
-    self.first_name = FirstName(value)
-    self.updated_at = datetime.now(timezone.utc).isoformat()
+  @property
+  def id(self) -> str:
+    return self.__id
   
-  def get_first_name(self) -> str:
-    return self.first_name.value
+  @property
+  def first_name(self) -> FirstName:
+    return self.__first_name.value
   
-  def set_last_name(self, value: str):
-    self.last_name = LastName(value)
-    self.updated_at = datetime.now(timezone.utc).isoformat()
-    
-  def get_last_name(self) -> str:
-    return self.last_name.value
+  @first_name.setter
+  def first_name(self, value: str):
+    self.__first_name = FirstName(value)
+    self.__updated_at = datetime.now(timezone.utc).isoformat()
+
+  @property
+  def last_name(self) -> LastName:
+    return self.__last_name.value
   
-  def set_username(self, value: str):
-    self.username = Username(value)
-    self.updated_at = datetime.now(timezone.utc).isoformat()
-    
-  def get_username(self) -> str:
-    return self.username.value
+  @last_name.setter
+  def last_name(self, value: str):
+    self.__last_name = LastName(value)
+    self.__updated_at = datetime.now(timezone.utc).isoformat()
+
+  @property
+  def username(self) -> Username:
+    return self.__username.value
   
-  def set_password(self, hashed_password: str):
-    self.password = Password(hashed_password)
-    self.updated_at = datetime.now(timezone.utc).isoformat()
-    
-  def get_password(self) -> str:
-    return self.password.value
+  @username.setter
+  def username(self, value: str):
+    self.__username = Username(value)
+    self.__updated_at = datetime.now(timezone.utc).isoformat()
+
+  @property
+  def password(self) -> Password:
+    return self.__password.value
   
-  def set_avatar(self, avatar_url: Optional[str]):
-    self.avatar = avatar_url
-    self.updated_at = datetime.now(timezone.utc).isoformat()
+  @password.setter
+  def password(self, hashed_password: str):
+    self.__password = Password(hashed_password)
+    self.__updated_at = datetime.now(timezone.utc).isoformat()
+  
+  @property
+  def avatar(self) -> Optional[str]:
+    return self.__avatar
+  
+  @avatar.setter
+  def avatar(self, avatar_url: Optional[str]):
+    self.__avatar = avatar_url
+    self.__updated_at = datetime.now(timezone.utc).isoformat()
+  
+  @property
+  def created_at(self) -> str:
+    return self.__created_at
+  
+  @property
+  def updated_at(self) -> str:
+    return self.__updated_at
     
   def to_dict(self) -> dict:
     return {
       "id": self.id,
-      "first_name": self.first_name.value,
-      "last_name": self.last_name.value,
-      "username": self.username.value,
-      "password": self.password.value,
+      "first_name": self.first_name,
+      "last_name": self.last_name,
+      "username": self.username,
+      "password": self.password,
       "avatar": self.avatar,
       "created_at": self.created_at,
       "updated_at": self.updated_at

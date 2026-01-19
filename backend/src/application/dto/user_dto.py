@@ -15,6 +15,13 @@ class CreateUserDTO(BaseModel):
   password: str
   avatar: Optional[str] = None
 
+class UpdateUserDTO(BaseModel):
+  first_name: Optional[str] = None
+  last_name: Optional[str] = None
+  username: Optional[str] = None
+  password: Optional[str] = None
+  avatar: Optional[str] = None
+
 class UserResponseDTO(BasicUserDTO):
   created_at: str
   updated_at: str

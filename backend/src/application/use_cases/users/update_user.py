@@ -4,8 +4,8 @@ from src.domain.exceptions import NotFoundException
 from src.domain.value_objects import Password
 
 class UpdateUserUseCase:
-  def __init__(self, uow: IUnitOfWork, password_hasher: IPasswordHasher):
-    self.uow = uow
+  def __init__(self, unit_of_work: IUnitOfWork, password_hasher: IPasswordHasher):
+    self.uow = unit_of_work
     self.password_hasher = password_hasher
   
   def execute(self, user_id: str, data: UpdateUserDTO) -> UserResponseDTO:

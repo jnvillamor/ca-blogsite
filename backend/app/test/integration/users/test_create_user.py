@@ -1,37 +1,9 @@
 import pytest
-import re
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
 from app.database.db import Base
 from app.database.unit_of_work import UnitOfWork
 from app.services import PasswordHasher, UuidGenerator
 from src.application.dto import CreateUserDTO
 from src.application.use_cases.users import CreateUserUseCase
-
-TEST_DB_URL = "sqlite:///:memory:"
-
-@pytest.fixture(scope="function")
-def db_session():
-  engine = create_engine(
-    TEST_DB_URL,
-    connect_args={"check_same_thread": False},
-  )
-
-  TestingSessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine,
-  )
-
-  Base.metadata.create_all(bind=engine)
-
-  session = TestingSessionLocal()
-  try:
-    yield session
-  finally:
-    session.close()
-    Base.metadata.drop_all(bind=engine)
 
 class TestCreateUserUseCase:
   def test_create_user_success(self, db_session):

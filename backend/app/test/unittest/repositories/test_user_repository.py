@@ -1,32 +1,7 @@
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
-from app.database.db import Base
+from sqlalchemy.orm import  Session
 from app.repositories import UserRepository
 from src.domain.entities import UserEntity
-from typing import Generator
-
-DATABASE_URL = "sqlite:///:memory:"
-
-@pytest.fixture
-def session() -> Generator[Session, None, None]:
-  engine = create_engine(DATABASE_URL, echo=False, future=True)
-
-  Base.metadata.create_all(bind=engine)
-
-  SessionLocal = sessionmaker(
-    bind=engine,
-    expire_on_commit=False,
-  )
-
-  session = SessionLocal()
-  try:
-    yield session
-    session.commit()
-  finally:
-    session.close()
-    engine.dispose()
-
 
 def make_user(
   id: str,
@@ -66,8 +41,8 @@ def assert_user_equal(entity1: UserEntity, entity2: UserEntity):
 # -------------------------
 class TestUserRepository:
 
-  def test_create_and_get_user(self, session: Session):
-    repo = UserRepository(session)
+  def test_create_and_get_user(self, db_session: Session):
+    repo = UserRepository(db_session)
     user = make_user("123")
     repo.create_user(user)
 
@@ -79,8 +54,8 @@ class TestUserRepository:
     retrieved_by_username = repo.get_user_by_username("johndoe")
     assert_user_equal(retrieved_by_username, user)
 
-  def test_get_all_users(self, session: Session):
-    repo = UserRepository(session)
+  def test_get_all_users(self, db_session: Session):
+    repo = UserRepository(db_session)
     users = [make_user(str(i), username=f"user{i}") for i in range(3)]
     for u in users:
       repo.create_user(u)
@@ -91,8 +66,8 @@ class TestUserRepository:
     for u in users:
       assert any(u.username == ru.username for ru in retrieved_users)
 
-  def test_update_user(self, session: Session):
-    repo = UserRepository(session)
+  def test_update_user(self, db_session: Session):
+    repo = UserRepository(db_session)
     user = make_user("999", first_name="Old", last_name="Name", username="olduser")
     repo.create_user(user)
 
@@ -108,8 +83,8 @@ class TestUserRepository:
     assert_user_equal(result, updated_user)
 
   @pytest.mark.parametrize("user_id", ["nonexistent"])
-  def test_nonexistent_user(self, session: Session, user_id):
-    repo = UserRepository(session)
+  def test_nonexistent_user(self, db_session: Session, user_id):
+    repo = UserRepository(db_session)
 
     assert repo.get_user_by_id(user_id) is None
     assert repo.get_user_by_username(user_id) is None
@@ -117,16 +92,16 @@ class TestUserRepository:
     user = make_user(user_id)
     assert repo.update_user(user_id, user) is None
 
-  def test_delete_user(self, session: Session):
-    repo = UserRepository(session)
+  def test_delete_user(self, db_session: Session):
+    repo = UserRepository(db_session)
     user = make_user("to_delete")
     repo.create_user(user)
 
     repo.delete_user("to_delete")
     assert repo.get_user_by_id("to_delete") is None
 
-  def test_get_all_users_empty(self, session: Session):
-    repo = UserRepository(session)
+  def test_get_all_users_empty(self, db_session: Session):
+    repo = UserRepository(db_session)
     users, count = repo.get_all_users()
     assert count == 0
     assert len(users) == 0

@@ -24,3 +24,6 @@ class UnitOfWork(IUnitOfWork):
   def rollback(self):
     self.session.rollback()
     
+# Get unit of work instance
+def get_uow(session: Session) -> UnitOfWork:
+  return UnitOfWork(session)

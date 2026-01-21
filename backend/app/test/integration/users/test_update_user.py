@@ -1,5 +1,5 @@
 import pytest
-from app.database.mappers import user_entity_to_model
+from sqlalchemy.orm import Session
 from app.database.models import UserModel
 from app.database.unit_of_work import UnitOfWork
 from app.services import PasswordHasher
@@ -8,7 +8,7 @@ from src.application.use_cases.users import UpdateUserUseCase
 from src.domain.entities import UserEntity
 
 @pytest.fixture
-def update_user_use_case(db_session):
+def update_user_use_case(db_session: Session) -> UpdateUserUseCase:
   unit_of_work = UnitOfWork(db_session)
   password_hasher = PasswordHasher()
   return UpdateUserUseCase(
@@ -16,40 +16,13 @@ def update_user_use_case(db_session):
     password_hasher=password_hasher
   )
 
-@pytest.fixture
-def create_test_user(db_session):
-  from app.database.models import UserModel
-  
-  def _create_test_user(
-    id: str = "test-user-id", 
-    first_name: str = "Test", 
-    last_name: str = "User", 
-    username: str = "testuser") -> UserEntity:
-    
-    test_user = UserEntity(
-      id=id,
-      first_name=first_name,
-      last_name=last_name,
-      username=username,
-      avatar="https://example.com/avatar.png",
-      password="hashedpassword",
-      created_at="2024-01-01T00:00:00Z",
-      updated_at="2024-01-01T00:00:00Z"
-    )
-    user_model = user_entity_to_model(test_user)
-    db_session.add(user_model)
-    db_session.commit()
-    return test_user
-  
-  return _create_test_user
-
 class TestUpdateUserUseCase:
   def test_update_user_success(
     self,
-    update_user_use_case,
-    create_test_user
+    update_user_use_case: UpdateUserUseCase,
+    create_test_user: callable
   ):
-    test_user = create_test_user()
+    test_user: UserEntity = create_test_user()
     
     update_dto = UpdateUserDTO(
       first_name="Updated",
@@ -99,13 +72,13 @@ class TestUpdateUserUseCase:
   )
   def test_update_user_invalid_names(
     self,
-    update_user_use_case,
-    create_test_user,
-    field,
-    invalid_value,
-    error_regex
+    update_user_use_case: UpdateUserUseCase,
+    create_test_user: callable,
+    field: str,
+    invalid_value: str,
+    error_regex: str
   ):
-    test_user = create_test_user()
+    test_user: UserEntity = create_test_user()
     update_data = UpdateUserDTO(**{field: invalid_value})
     
     with pytest.raises(Exception, match=error_regex) as exc_info:
@@ -127,12 +100,12 @@ class TestUpdateUserUseCase:
   )
   def test_update_user_invalid_password(
     self,
-    update_user_use_case,
-    create_test_user,
-    password,
-    error_regex
+    update_user_use_case: UpdateUserUseCase,
+    create_test_user: callable,
+    password: str,
+    error_regex: str
   ):
-    test_user = create_test_user()
+    test_user: UserEntity = create_test_user()
     update_data = UpdateUserDTO(password=password)
     
     with pytest.raises(Exception, match=error_regex) as exc_info:
@@ -143,11 +116,11 @@ class TestUpdateUserUseCase:
       
   def test_update_user_password_success(
     self,
-    update_user_use_case,
-    create_test_user,
-    db_session
+    update_user_use_case: UpdateUserUseCase,
+    create_test_user: callable,
+    db_session: Session
   ):
-    test_user = create_test_user()
+    test_user: UserEntity = create_test_user()
     
     new_password = "NewValid1!"
     update_dto = UpdateUserDTO(password=new_password)

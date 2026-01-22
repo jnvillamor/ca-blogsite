@@ -10,6 +10,7 @@ from app.services import PasswordHasher, UuidGenerator
 from src.application.dto import (
   CreateUserDTO, 
   UpdateUserDTO,
+  ChangePasswordDTO,
   UserResponseDTO,
   PaginationDTO,
   PaginationResponseDTO
@@ -18,6 +19,7 @@ from src.application.use_cases.users import (
   CreateUserUseCase, 
   GetUserUseCase,
   UpdateUserUseCase,
+  ChangePasswordUseCase,
   DeleteUserUseCase
 )
 
@@ -163,6 +165,35 @@ def update_user(
   use_case = UpdateUserUseCase(unit_of_work)
   result = use_case.execute(user_id, user_data)
   logger.info(f"User updated: {result.username}")
+  return result
+
+@router.put(
+  "/change-password/{user_id}",
+  status_code=status.HTTP_200_OK,
+  response_model=UserResponseDTO,
+  response_model_exclude_none=True,
+  responses={
+    200: {"description": "User password changed successfully."},
+    400: {"description": "Bad Request."},
+    404: {"description": "User not found."},
+    500: {"description": "Internal Server Error."}
+  }
+)
+def change_user_password(
+  request: Request,
+  user_id: str,
+  pass_data: ChangePasswordDTO,
+  session: Session = Depends(get_db)
+):
+  logger.info(f"Changing password for user with ID: {user_id}")
+  password_hasher = PasswordHasher()
+  unit_of_work = get_uow(session)
+  use_case = ChangePasswordUseCase(
+    unit_of_work=unit_of_work,
+    password_hasher=password_hasher
+  )
+  result = use_case.execute(user_id, pass_data)
+  logger.info(f"Password changed for user ID: {user_id}")
   return result
 
 @router.delete(

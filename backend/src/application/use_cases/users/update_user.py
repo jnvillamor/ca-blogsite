@@ -1,6 +1,6 @@
 from src.application.dto import UpdateUserDTO, UserResponseDTO
 from src.application.services import IUnitOfWork, IPasswordHasher
-from src.domain.exceptions import NotFoundException
+from src.domain.exceptions import NotFoundException, InvalidDataException
 from src.domain.value_objects import Password
 
 class UpdateUserUseCase:
@@ -14,6 +14,10 @@ class UpdateUserUseCase:
 
       if not user:
         raise NotFoundException("User", f"user_id: {user_id}")
+      
+      existing_username = self.uow.users.get_user_by_username(data.username) if data.username else None
+      if existing_username and existing_username.id != user_id:
+        raise InvalidDataException(f"The username '{data.username}' is already taken.")
     
     if data.password is not None:
       Password.is_valid(data.password)

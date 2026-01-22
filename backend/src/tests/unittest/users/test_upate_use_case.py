@@ -2,7 +2,7 @@ import pytest
 from src.application.dto import UpdateUserDTO, UserResponseDTO
 from src.application.use_cases.users import UpdateUserUseCase
 from src.domain.entities import UserEntity
-from src.domain.exceptions import NotFoundException
+from src.domain.exceptions import NotFoundException, InvalidDataException
 
 TEST_DATA = [
   (
@@ -105,6 +105,7 @@ class TestUpdateUserUseCase:
   ):
     # Arrange
     uow.users.get_user_by_id.return_value = existing_user
+    uow.users.get_user_by_username.return_value = None
     
     if update_data.password:
       password_hasher.hash.return_value = "new_hashed_password"
@@ -141,6 +142,7 @@ class TestUpdateUserUseCase:
   ):
     # Arrange
     uow.users.get_user_by_id.return_value = None
+    uow.users.get_user_by_username.return_value = None
     
     # Act & Assert
     with pytest.raises(NotFoundException) as exc_info:
@@ -179,6 +181,7 @@ class TestUpdateUserUseCase:
   ):
     # Arrange
     uow.users.get_user_by_id.return_value = existing_user
+    uow.users.get_user_by_username.return_value = None
     update_data = UpdateUserDTO(**{field: invalid_value})
     
     # Act & Assert
@@ -211,6 +214,7 @@ class TestUpdateUserUseCase:
   ):
     # Arrange
     uow.users.get_user_by_id.return_value = existing_user
+    uow.users.get_user_by_username.return_value = None
     update_data = UpdateUserDTO(password=password)
     
     # Act & Assert
@@ -230,6 +234,7 @@ class TestUpdateUserUseCase:
   ):
     # Arrange
     uow.users.get_user_by_id.return_value = existing_user
+    uow.users.get_user_by_username.return_value = None
     update_data = UpdateUserDTO()  # No fields set
     
     uow.users.update_user.side_effect = lambda user_id, user: existing_user
@@ -251,5 +256,35 @@ class TestUpdateUserUseCase:
     assert result.avatar == existing_user.avatar
     assert result.created_at == existing_user.created_at
     assert result.updated_at == existing_user.updated_at  # updated_at should remain unchanged 
+  
+  def test_execute_duplicate_username(
+    self,
+    use_case,
+    uow,
+    existing_user
+  ):
+    # Arrange
+    uow.users.get_user_by_id.return_value = existing_user
+    uow.users.get_user_by_username.return_value = UserEntity(
+      id="another_user_id",
+      first_name="Jane",
+      last_name="Doe",
+      username="existingusername",
+      password="hashed_password",
+      avatar=None,
+      created_at="2024-01-02T00:00:00Z",
+      updated_at="2024-01-02T00:00:00Z"
+    )
     
+    update_data = UpdateUserDTO(username="existingusername")
     
+    # Act & Assert
+    with pytest.raises(InvalidDataException) as exc_info:
+      use_case.execute(
+        user_id="user_id_123",
+        data=update_data
+      )
+    
+    assert str(exc_info.value) == "The username 'existingusername' is already taken."
+    uow.users.get_user_by_id.assert_called_once_with("user_id_123")
+    uow.users.get_user_by_username.assert_called_once_with("existingusername")

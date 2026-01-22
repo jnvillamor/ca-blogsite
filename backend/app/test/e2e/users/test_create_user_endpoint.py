@@ -2,7 +2,7 @@ import re
 import pytest
 from fastapi.testclient import TestClient
 
-class TestUserEndpoint:
+class TestCreateUserEndpoint:
   def test_create_user_success(self, client: TestClient):
     payload = {
       "first_name": "John",

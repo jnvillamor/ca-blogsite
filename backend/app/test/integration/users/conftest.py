@@ -2,6 +2,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.database.mappers import user_entity_to_model
+from app.services import PasswordHasher
 from src.domain.entities import UserEntity
 
 @pytest.fixture
@@ -12,13 +13,15 @@ def create_test_user(db_session: Session) -> callable:
     last_name: str = "User", 
     username: str = "testuser") -> UserEntity:
     
+    hashed_password = PasswordHasher().hash("Password123!")
+
     test_user = UserEntity(
       id=id,
       first_name=first_name,
       last_name=last_name,
       username=username,
       avatar="https://example.com/avatar.png",
-      password="hashedpassword",
+      password=hashed_password,
       created_at="2024-01-01T00:00:00Z",
       updated_at="2024-01-01T00:00:00Z"
     )

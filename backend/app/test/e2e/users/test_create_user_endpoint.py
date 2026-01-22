@@ -86,7 +86,7 @@ class TestCreateUserEndpoint:
       ("NOLOWERCASE1!", r"at least one lowercase letter"),
       ("NoSpecial1", r"at least one special character"),
     ]
-)
+  )
 
   def test_create_user_invalid_password(
     self,

@@ -58,7 +58,7 @@ class TestChangePasswordUseCase:
       confirm_new_password="SecurePass.123"
     )
 
-    unit_of_work.users.update_user.side_effect = lambda user: user
+    unit_of_work.users.update_user.side_effect = lambda user_id, user: user
     result = use_case.execute(user_id="user1", data=payload)
 
     # Assert

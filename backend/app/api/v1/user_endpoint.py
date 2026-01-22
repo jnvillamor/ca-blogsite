@@ -1,5 +1,6 @@
 import logging
 from fastapi import APIRouter, Request, Depends, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.database.db import get_db
@@ -99,6 +100,14 @@ def get_user(
   user_repo = UserRepository(session)
   use_case = GetUserUseCase(user_repo)
   result = use_case.get_by_id(user_id)
+
+  if result is None:
+    logger.warning(f"User with ID '{user_id}' not found.")
+    return JSONResponse(
+      status_code=status.HTTP_404_NOT_FOUND,
+      content={"detail": f"User with ID '{user_id}' not found."}
+    )
+
   logger.info(f"User fetched: {result.username}")
   return result
 
@@ -122,6 +131,12 @@ def get_user_by_username(
   user_repo = UserRepository(session)
   use_case = GetUserUseCase(user_repo)
   result = use_case.get_by_username(username)
+  if result is None:
+    logger.warning(f"User with username '{username}' not found.")
+    return JSONResponse(
+      status_code=status.HTTP_404_NOT_FOUND,
+      content={"detail": f"User with username '{username}' not found."}
+    )
   logger.info(f"User fetched: {result.id}")
   return result
 

@@ -22,6 +22,11 @@ class UpdateUserDTO(BaseModel):
   password: Optional[str] = None
   avatar: Optional[str] = None
 
+class ChangePasswordDTO(BaseModel):
+  old_password: str
+  new_password: str
+  confirm_new_password: str
+
 class UserResponseDTO(BasicUserDTO):
   created_at: str
   updated_at: str

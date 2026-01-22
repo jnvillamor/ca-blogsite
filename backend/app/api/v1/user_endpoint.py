@@ -1,5 +1,5 @@
 import logging
-from fastapi import APIRouter, Request, Depends
+from fastapi import APIRouter, Request, Depends, status
 from sqlalchemy.orm import Session
 
 from app.database.db import get_db
@@ -29,6 +29,7 @@ router = APIRouter(
 
 @router.post(
   "/register", 
+  status_code=status.HTTP_201_CREATED,
   response_model=UserResponseDTO,
   response_model_exclude_none=True,
   responses={
@@ -58,6 +59,7 @@ def register_user(
 
 @router.get(
   "/",
+  status_code=status.HTTP_200_OK,
   response_model=PaginationResponseDTO,
   response_model_exclude_none=True,
   responses={
@@ -79,6 +81,7 @@ def get_users(
 
 @router.get(
   "/{user_id}",
+  status_code=status.HTTP_200_OK,
   response_model=UserResponseDTO,
   response_model_exclude_none=True,
   responses={
@@ -101,6 +104,7 @@ def get_user(
 
 @router.get(
   "/by-username/{username}",
+  status_code=status.HTTP_200_OK,
   response_model=UserResponseDTO,
   response_model_exclude_none=True,
   responses={
@@ -123,6 +127,7 @@ def get_user_by_username(
 
 @router.put(
   "/{user_id}",
+  status_code=status.HTTP_200_OK,
   response_model=UserResponseDTO,
   response_model_exclude_none=True,
   responses={
@@ -148,6 +153,7 @@ def update_user(
 
 @router.delete(
   "/{user_id}",
+  status_code=status.HTTP_204_NO_CONTENT,
   responses={
     204: {"description": "User deleted successfully."},
     404: {"description": "User not found."},

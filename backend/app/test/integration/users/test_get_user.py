@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy.orm import Session
 from app.repositories import UserRepository
 from src.application.use_cases.users import GetUserUseCase
-from src.application.dto import PaginationDTO
+from src.application.dto import PaginationDTO, PaginationResponseDTO
 from src.domain.entities import UserEntity
 
 @pytest.fixture
@@ -67,8 +67,8 @@ class TestGetUserUseCase:
     )
     
     pagination = PaginationDTO(skip=0, limit=10, search="")
-    users, count = get_user_use_case.get_all_users(pagination)
+    result = get_user_use_case.get_all_users(pagination)
     
-    assert count >= 2
-    assert any(user.id == test_user1.id for user in users)
-    assert any(user.id == test_user2.id for user in users)
+    assert result.total >= 2
+    assert any(user.id == test_user1.id for user in result.items)
+    assert any(user.id == test_user2.id for user in result.items)

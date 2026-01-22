@@ -1,5 +1,5 @@
 import pytest
-from src.application.dto import PaginationDTO, UserResponseDTO
+from src.application.dto import PaginationDTO, PaginationResponseDTO, UserResponseDTO
 from src.application.use_cases.users import GetUserUseCase
 from src.application.repositories import IUserRepository
 from src.domain.entities import UserEntity
@@ -125,12 +125,16 @@ class TestGetUserUseCase:
     user_repository.get_all_users.return_value = (valid_users_list, len(valid_users_list))
     
     # Act
-    result, count = use_case.get_all_users(pagination)
+    result = use_case.get_all_users(pagination)
     
     # Assert
     expected_dtos = [UserResponseDTO.model_validate(user.to_dict()) for user in valid_users_list]
-    assert result == expected_dtos
-    assert count == len(valid_users_list)
+    assert result == PaginationResponseDTO(
+      total=len(valid_users_list),
+      skip=pagination.skip,
+      limit=pagination.limit,
+      items=expected_dtos
+    )
     user_repository.get_all_users.assert_called_once_with(
       skip=pagination.skip,
       limit=pagination.limit,

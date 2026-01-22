@@ -1,8 +1,6 @@
 import pytest
 from sqlalchemy.orm import Session
-from app.database.models import UserModel
 from app.database.unit_of_work import UnitOfWork
-from app.services import PasswordHasher
 from src.application.dto import UpdateUserDTO
 from src.application.use_cases.users import UpdateUserUseCase
 from src.domain.entities import UserEntity

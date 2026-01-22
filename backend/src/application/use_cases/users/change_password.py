@@ -13,21 +13,22 @@ class ChangePasswordUseCase:
     self.password_hasher = password_hasher
 
   def execute(self, user_id: str, data: ChangePasswordDTO) -> UserResponseDTO:
-    user = self.uow.users.get_user_by_id(user_id)
+    with self.uow:
+      user = self.uow.users.get_user_by_id(user_id)
 
-    if not user:
-      raise NotFoundException("User", f"user_id: {user_id}")
-    
-    if data.confirm_new_password != data.new_password:
-      raise InvalidDataException(f"New password and confirmation do not match.")
-    
-    if not self.password_hasher.verify(data.old_password, user.password):
-      raise InvalidDataException("Old password is incorrect.")
-    
-    Password.is_valid(data.new_password)
+      if not user:
+        raise NotFoundException("User", f"user_id: {user_id}")
+      
+      if data.confirm_new_password != data.new_password:
+        raise InvalidDataException(f"New password and confirmation do not match.")
+      
+      if not self.password_hasher.verify(data.old_password, user.password):
+        raise InvalidDataException("Old password is incorrect.")
+      
+      Password.is_valid(data.new_password)
 
-    hashed_new_password = self.password_hasher.hash(data.new_password)
+      hashed_new_password = self.password_hasher.hash(data.new_password)
 
-    user.password = hashed_new_password
-    updated_user = self.uow.users.update_user(user)
-    return UserResponseDTO.model_validate(updated_user.to_dict())
+      user.password = hashed_new_password
+      updated_user = self.uow.users.update_user(user_id, user)
+      return UserResponseDTO.model_validate(updated_user.to_dict())

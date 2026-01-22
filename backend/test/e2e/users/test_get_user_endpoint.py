@@ -1,5 +1,5 @@
 import pytest
-from app.test.e2e.conftest import EXISTING_USERS
+from test.e2e.conftest import EXISTING_USERS
 from fastapi.testclient import TestClient
 
 class TestGetUserEndpoint:

@@ -19,7 +19,6 @@ class UpdateUserDTO(BaseModel):
   first_name: Optional[str] = None
   last_name: Optional[str] = None
   username: Optional[str] = None
-  password: Optional[str] = None
   avatar: Optional[str] = None
 
 class ChangePasswordDTO(BaseModel):

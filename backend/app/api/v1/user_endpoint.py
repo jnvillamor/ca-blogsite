@@ -160,8 +160,7 @@ def update_user(
 ):
   logger.info(f"Updating user with ID: {user_id}")
   unit_of_work = get_uow(session)
-  password_hasher = PasswordHasher()
-  use_case = UpdateUserUseCase(unit_of_work, password_hasher)
+  use_case = UpdateUserUseCase(unit_of_work)
   result = use_case.execute(user_id, user_data)
   logger.info(f"User updated: {result.username}")
   return result

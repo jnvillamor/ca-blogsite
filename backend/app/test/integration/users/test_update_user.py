@@ -10,10 +10,8 @@ from src.domain.entities import UserEntity
 @pytest.fixture
 def update_user_use_case(db_session: Session) -> UpdateUserUseCase:
   unit_of_work = UnitOfWork(db_session)
-  password_hasher = PasswordHasher()
   return UpdateUserUseCase(
     unit_of_work=unit_of_work,
-    password_hasher=password_hasher
   )
 
 class TestUpdateUserUseCase:
@@ -87,51 +85,28 @@ class TestUpdateUserUseCase:
         data=update_data
       )
 
-  @pytest.mark.parametrize(
-    "password, error_regex",
-    [
-        ("", r"Password cannot be empty"),
-        ("short", r"at least 8 characters"),
-        ("NoDigits!", r"at least one digit"),
-        ("nouppercase1!", r"at least one uppercase"),
-        ("NOLOWERCASE1!", r"at least one lowercase"),
-        ("NoSpecial1", r"at least one special character"),
-    ]
-  )
-  def test_update_user_invalid_password(
+  def test_update_user_duplicate_username(
     self,
     update_user_use_case: UpdateUserUseCase,
-    create_test_user: callable,
-    password: str,
-    error_regex: str
+    create_test_user: callable
   ):
-    test_user: UserEntity = create_test_user()
-    update_data = UpdateUserDTO(password=password)
-    
-    with pytest.raises(Exception, match=error_regex) as exc_info:
-      update_user_use_case.execute(
-        user_id = test_user.id,
-        data=update_data
-      )
-      
-  def test_update_user_password_success(
-    self,
-    update_user_use_case: UpdateUserUseCase,
-    create_test_user: callable,
-    db_session: Session
-  ):
-    test_user: UserEntity = create_test_user()
-    
-    new_password = "NewValid1!"
-    update_dto = UpdateUserDTO(password=new_password)
-    
-    updated_user = update_user_use_case.execute(
-      user_id = test_user.id,
-      data=update_dto
+    user1: UserEntity = create_test_user(
+      id="user1",
+      username="uniqueusername1"
+    )
+    user2: UserEntity = create_test_user(
+      id="user2",
+      username="uniqueusername2"
     )
     
-    user_model = db_session.query(UserModel).filter_by(id=test_user.id).first()
+    update_dto = UpdateUserDTO(
+      username="uniqueusername1"
+    )
     
-    assert updated_user is not None
-    assert user_model.password != test_user.password  # Password should be hashed and different
-    assert PasswordHasher().verify(new_password, user_model.password)  # Verify new password
+    with pytest.raises(Exception) as exc_info:
+      update_user_use_case.execute(
+        user_id = user2.id,
+        data=update_dto
+      )
+    
+    assert "The username 'uniqueusername1' is already taken." in str(exc_info.value)

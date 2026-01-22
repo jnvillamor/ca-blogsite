@@ -57,14 +57,9 @@ class TestUpdateUserUseCase:
     return uow
   
   @pytest.fixture
-  def password_hasher(self, mocker):
-    return mocker.Mock()
-  
-  @pytest.fixture
-  def use_case(self, uow, password_hasher):
+  def use_case(self, uow):
     return UpdateUserUseCase(
       unit_of_work=uow,
-      password_hasher=password_hasher
     )
     
   @pytest.fixture
@@ -73,7 +68,6 @@ class TestUpdateUserUseCase:
       first_name="John",
       last_name="Smith",
       username="johnsmith",
-      password="NewSecurePass123!",
       avatar=None
     )
   
@@ -98,7 +92,6 @@ class TestUpdateUserUseCase:
     self, 
     use_case, 
     uow,
-    password_hasher,
     existing_user,
     update_data,
     expected_result
@@ -106,9 +99,6 @@ class TestUpdateUserUseCase:
     # Arrange
     uow.users.get_user_by_id.return_value = existing_user
     uow.users.get_user_by_username.return_value = None
-    
-    if update_data.password:
-      password_hasher.hash.return_value = "new_hashed_password"
     
     uow.users.update_user.side_effect = lambda user_id, user: existing_user
     
@@ -120,9 +110,6 @@ class TestUpdateUserUseCase:
     
     # Assert
     uow.users.get_user_by_id.assert_called_once_with("user_id_123")
-    
-    if update_data.password:
-      password_hasher.hash.assert_called_once_with(update_data.password)
     
     uow.users.update_user.assert_called_once()
     
@@ -193,39 +180,6 @@ class TestUpdateUserUseCase:
     
     uow.users.get_user_by_id.assert_called_once_with("user_id_123")
   
-  @pytest.mark.parametrize(
-    "password, error_regex",
-    [
-        ("", r"Password cannot be empty"),
-        ("short", r"at least 8 characters"),
-        ("NoDigits!", r"at least one digit"),
-        ("nouppercase1!", r"at least one uppercase"),
-        ("NOLOWERCASE1!", r"at least one lowercase"),
-        ("NoSpecial1", r"at least one special character"),
-    ]
-  )
-  def test_execute_invalid_password(
-    self,
-    use_case,
-    uow,
-    existing_user,
-    password,
-    error_regex
-  ):
-    # Arrange
-    uow.users.get_user_by_id.return_value = existing_user
-    uow.users.get_user_by_username.return_value = None
-    update_data = UpdateUserDTO(password=password)
-    
-    # Act & Assert
-    with pytest.raises(Exception, match=error_regex) as exc_info:
-      use_case.execute(
-        user_id="user_id_123",
-        data=update_data
-      )
-    
-    uow.users.get_user_by_id.assert_called_once_with("user_id_123")
-    
   def test_execute_no_fields_to_update(
     self,
     use_case,

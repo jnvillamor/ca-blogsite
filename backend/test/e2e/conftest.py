@@ -1,3 +1,4 @@
+import copy
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -59,7 +60,6 @@ def db_session() -> Generator[Session, None, None]:
     yield session
   finally:
     session.close()
-    Base.metadata.drop_all(bind=engine)
 
 @pytest.fixture(scope="function", autouse=True)
 def setup_database():
@@ -76,10 +76,11 @@ def client(db_session) -> Generator[TestClient, None, None]:
 
 @pytest.fixture
 def create_existing_users(db_session: Session):
-  payloads = EXISTING_USERS
+    payloads = copy.deepcopy(EXISTING_USERS)
 
-  for payload in payloads:
-    payload['password'] = PasswordHasher().hash(payload['password'])
-    user = UserModel(**payload)
-    db_session.add(user)
-  db_session.commit()
+    for payload in payloads:
+        payload["password"] = PasswordHasher().hash(payload["password"])
+        user = UserModel(**payload)
+        db_session.add(user)
+
+    db_session.commit()

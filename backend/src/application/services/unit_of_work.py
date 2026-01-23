@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
 from src.application.repositories import (
-  IUserRepository
+  IUserRepository,
+  IBlogRepository
 )
 
 class IUnitOfWork(ABC):
   users: IUserRepository
+  blogs: IBlogRepository
   
   @abstractmethod
   def __enter__(self):

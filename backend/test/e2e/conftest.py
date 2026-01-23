@@ -6,6 +6,7 @@ from typing import Generator
 
 from app.database.db import Base, get_db
 from app.database.models import UserModel
+from app.services import PasswordHasher
 from app.main import app
 
 TEST_DB_URL = "sqlite:///./test_e2e.db"
@@ -16,7 +17,7 @@ EXISTING_USERS = [
     "first_name": "Alice",
     "last_name": "Smith",
     "username": "alicesmith",
-    "password": "Hashed_Password!",
+    "password": "SecurePass.123",
     "created_at": "2024-01-01T00:00:00Z",
     "updated_at": "2024-01-01T00:00:00Z"
   },
@@ -25,7 +26,7 @@ EXISTING_USERS = [
     "first_name": "Bob",
     "last_name": "Johnson",
     "username": "bobjohnson",
-    "password": "hashed_Password2@",
+    "password": "SecurePass.123",
     "created_at": "2024-01-02T00:00:00Z",
     "updated_at": "2024-01-02T00:00:00Z"
   },
@@ -34,7 +35,7 @@ EXISTING_USERS = [
     "first_name": "Charlie",
     "last_name": "Brown",
     "username": "charliebrown",
-    "password": "Hashed_password3#",      
+    "password": "SecurePass.123",      
     "created_at": "2024-01-03T00:00:00Z",
     "updated_at": "2024-01-03T00:00:00Z"
   }
@@ -78,6 +79,7 @@ def create_existing_users(db_session: Session):
   payloads = EXISTING_USERS
 
   for payload in payloads:
+    payload['password'] = PasswordHasher().hash(payload['password'])
     user = UserModel(**payload)
     db_session.add(user)
   db_session.commit()

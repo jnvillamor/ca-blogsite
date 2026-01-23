@@ -1,1 +1,2 @@
 from .user_repository import IUserRepository
+from .blog_repository import IBlogRepository

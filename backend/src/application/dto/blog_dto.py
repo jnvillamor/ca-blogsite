@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 from .basic_dto import BasicUserDTO
 
 class CreateBlogDTO(BaseModel):
@@ -14,6 +15,4 @@ class BlogResponseDTO(BaseModel):
   author_id: str
   created_at: str
   updated_at: str
-
-class BlogWithAuthorDTO(BlogResponseDTO):
-  author: BasicUserDTO
+  author: Optional[BasicUserDTO] = None

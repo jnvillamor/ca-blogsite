@@ -1,5 +1,5 @@
 from src.application.services import IUnitOfWork, IIdGenerator
-from src.application.dto import CreateBlogDTO, BlogResponseDTO, BlogWithAuthorDTO
+from src.application.dto import CreateBlogDTO, BlogResponseDTO
 from src.domain.entities import BlogEntity
 from src.domain.exceptions import NotFoundException
 
@@ -16,7 +16,7 @@ class CreateBlogUseCase:
     self, 
     blog_data: CreateBlogDTO, 
     return_with_author: bool = False
-  ) -> BlogResponseDTO | BlogWithAuthorDTO:
+  ) -> BlogResponseDTO:
     with self.uow:
       user = self.uow.users.get_user_by_id(blog_data.author_id)
 
@@ -34,9 +34,9 @@ class CreateBlogUseCase:
       )
       created_blog = self.uow.blogs.create_blog(new_blog)
 
+      result = created_blog.to_dict()
+
       if return_with_author:
-        return BlogWithAuthorDTO.model_validate({
-          **created_blog.to_dict(),
-          "author": user.to_dict()
-        })
-      return BlogResponseDTO.model_validate(created_blog.to_dict())
+        result["author"] = user.to_dict()
+
+      return BlogResponseDTO.model_validate(result)

@@ -8,6 +8,11 @@ class CreateBlogDTO(BaseModel):
   author_id: str
   hero_image: Optional[str] = None
 
+class UpdateBlogDTO(BaseModel):
+  title: Optional[str] = None
+  content: Optional[str] = None
+  hero_image: Optional[str] = None
+
 class BlogResponseDTO(BaseModel):
   id: str
   title: str

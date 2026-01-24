@@ -124,6 +124,10 @@ def get_user(
     500: {"description": "Internal Server Error."}
   }
 )
+@router.get(
+  "/by-username/{username}/",
+  include_in_schema=False
+)
 def get_user_by_username(
   request: Request,
   username: str,

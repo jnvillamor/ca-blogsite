@@ -1,13 +1,6 @@
 from pydantic import BaseModel
 from  typing import Optional
 
-class BasicUserDTO(BaseModel):
-  id: str
-  first_name: str
-  last_name: str
-  username: str
-  avatar: Optional[str] = None
-  
 class CreateUserDTO(BaseModel):
   first_name: str
   last_name: str
@@ -26,7 +19,12 @@ class ChangePasswordDTO(BaseModel):
   new_password: str
   confirm_new_password: str
 
-class UserResponseDTO(BasicUserDTO):
+class UserResponseDTO(BaseModel):
+  id: str
+  first_name: str
+  last_name: str
+  username: str
+  avatar: Optional[str] = None
   created_at: str
   updated_at: str
   

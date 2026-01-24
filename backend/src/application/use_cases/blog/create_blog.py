@@ -15,7 +15,6 @@ class CreateBlogUseCase:
   def execute(
     self, 
     blog_data: CreateBlogDTO, 
-    return_with_author: bool = False
   ) -> BlogResponseDTO:
     with self.uow:
       user = self.uow.users.get_user_by_id(blog_data.author_id)
@@ -34,9 +33,4 @@ class CreateBlogUseCase:
       )
       created_blog = self.uow.blogs.create_blog(new_blog)
 
-      result = created_blog.to_dict()
-
-      if return_with_author:
-        result["author"] = user.to_dict()
-
-      return BlogResponseDTO.model_validate(result)
+      return BlogResponseDTO.model_validate(created_blog.to_dict())

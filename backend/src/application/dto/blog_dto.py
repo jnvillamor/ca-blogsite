@@ -6,7 +6,7 @@ class CreateBlogDTO(BaseModel):
   title: str
   content: str
   author_id: str
-  hero_image: str | None = None
+  hero_image: Optional[str] = None
 
 class BlogResponseDTO(BaseModel):
   id: str
@@ -15,4 +15,5 @@ class BlogResponseDTO(BaseModel):
   author_id: str
   created_at: str
   updated_at: str
+  hero_image: Optional[str] = None 
   author: Optional[BasicUserDTO] = None

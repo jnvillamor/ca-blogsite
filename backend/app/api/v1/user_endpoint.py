@@ -42,6 +42,10 @@ router = APIRouter(
     500: {"description": "Internal Server Error."}
   }
 )
+@router.post(
+  "/register/",
+  include_in_schema=False
+)
 def register_user(
   request: Request,
   user_data: CreateUserDTO,
@@ -92,6 +96,10 @@ def get_users(
     404: {"description": "User not found."},
     500: {"description": "Internal Server Error."}
   }
+)
+@router.get(
+  "/{user_id}/",
+  include_in_schema=False
 )
 def get_user(
   request: Request,
@@ -158,6 +166,10 @@ def get_user_by_username(
     500: {"description": "Internal Server Error."}
   }
 )
+@router.put(
+  "/{user_id}/",
+  include_in_schema=False
+) 
 def update_user(
   request: Request,
   user_id: str,
@@ -182,6 +194,10 @@ def update_user(
     404: {"description": "User not found."},
     500: {"description": "Internal Server Error."}
   }
+)
+@router.put(
+  "/change-password/{user_id}/",
+  include_in_schema=False
 )
 def change_user_password(
   request: Request,
@@ -208,6 +224,10 @@ def change_user_password(
     404: {"description": "User not found."},
     500: {"description": "Internal Server Error."}
   }
+)
+@router.delete(
+  "/{user_id}/",
+  include_in_schema=False
 )
 def delete_user(
   request: Request,

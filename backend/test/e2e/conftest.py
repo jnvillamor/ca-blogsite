@@ -42,6 +42,10 @@ EXISTING_USERS = [
   }
 ]
 
+@pytest.fixture(scope="function")
+def existing_users():
+  return copy.deepcopy(EXISTING_USERS)
+
 engine = create_engine(
   TEST_DB_URL,
   connect_args={"check_same_thread": False},
@@ -75,12 +79,10 @@ def client(db_session) -> Generator[TestClient, None, None]:
   app.dependency_overrides.clear()
 
 @pytest.fixture
-def create_existing_users(db_session: Session):
-    payloads = copy.deepcopy(EXISTING_USERS)
+def create_existing_users(db_session: Session, existing_users):
+  for payload in existing_users:
+    payload["password"] = PasswordHasher().hash(payload["password"])
+    user = UserModel(**payload)
+    db_session.add(user)
 
-    for payload in payloads:
-        payload["password"] = PasswordHasher().hash(payload["password"])
-        user = UserModel(**payload)
-        db_session.add(user)
-
-    db_session.commit()
+  db_session.commit()

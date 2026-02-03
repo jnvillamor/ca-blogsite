@@ -1,5 +1,4 @@
 import pytest
-from test.e2e.conftest import EXISTING_USERS
 from fastapi.testclient import TestClient
 
 class TestGetUserEndpoint:
@@ -40,6 +39,7 @@ class TestGetUserEndpoint:
   )
   def test_get_user_by_id_success(
     self,
+    existing_users,
     create_existing_users,
     client: TestClient,
     user_id: str
@@ -48,7 +48,7 @@ class TestGetUserEndpoint:
 
     assert response.status_code == 200
     data = response.json()
-    expected_user = next(user for user in EXISTING_USERS if user["id"] == user_id)
+    expected_user = next(user for user in existing_users if user["id"] == user_id)
     for key in expected_user:
       if key != "password":
         assert data[key] == expected_user[key]
@@ -76,6 +76,7 @@ class TestGetUserEndpoint:
   def test_get_user_by_username_success(
     self,
     create_existing_users,
+    existing_users,
     client: TestClient,
     username: str
   ):
@@ -83,7 +84,7 @@ class TestGetUserEndpoint:
 
     assert response.status_code == 200
     data = response.json()
-    expected_user = next(user for user in EXISTING_USERS if user["username"] == username)
+    expected_user = next(user for user in existing_users if user["username"] == username)
     for key in expected_user:
       if key != "password":
         assert data[key] == expected_user[key]

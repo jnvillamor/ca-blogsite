@@ -67,7 +67,7 @@ def register_user(
 @router.get(
   "/",
   status_code=status.HTTP_200_OK,
-  response_model=PaginationResponseDTO,
+  response_model=PaginationResponseDTO[UserResponseDTO],
   response_model_exclude_none=True,
   responses={
     200: {"description": "List of users retrieved successfully."},

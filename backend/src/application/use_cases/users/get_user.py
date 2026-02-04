@@ -1,6 +1,5 @@
 from src.application.dto import UserResponseDTO, PaginationDTO, PaginationResponseDTO
 from src.application.repositories import IUserRepository
-from typing import Tuple, List
 
 class GetUserUseCase:
   def __init__(self, user_repository: IUserRepository):
@@ -20,7 +19,7 @@ class GetUserUseCase:
     
     return UserResponseDTO.model_validate(user.to_dict())
   
-  def get_all_users(self, pagination: PaginationDTO) -> PaginationResponseDTO:
+  def get_all_users(self, pagination: PaginationDTO) -> PaginationResponseDTO[UserResponseDTO]:
     users, count = self.user_repository.get_all_users(
       skip=pagination.skip,
       limit=pagination.limit,

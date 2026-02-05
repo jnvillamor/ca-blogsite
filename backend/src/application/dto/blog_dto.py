@@ -1,3 +1,4 @@
+from datetime import datetime
 from pydantic import BaseModel
 from typing import Optional
 from .basic_dto import BasicUserDTO
@@ -18,7 +19,7 @@ class BlogResponseDTO(BaseModel):
   title: str
   content: str
   author_id: str
-  created_at: str
-  updated_at: str
+  created_at: datetime
+  updated_at: datetime
   hero_image: Optional[str] = None 
   author: Optional[BasicUserDTO] = None

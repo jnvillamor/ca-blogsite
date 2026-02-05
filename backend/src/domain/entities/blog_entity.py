@@ -10,16 +10,16 @@ class BlogEntity:
     content: str,
     author_id: str,
     hero_image: Optional[str] = None,
-    created_at: Optional[str] = None,
-    updated_at: Optional[str] = None
+    created_at: Optional[datetime] = None,
+    updated_at: Optional[datetime] = None
   ):
     self.__id = id
     self.__title = Title(title) 
     self.__content = Content(content)
     self.__author_id = author_id
     self.__hero_image = hero_image
-    self.__created_at = created_at or datetime.now().isoformat()
-    self.__updated_at = updated_at or datetime.now().isoformat()
+    self.__created_at = created_at or datetime.now()
+    self.__updated_at = updated_at or datetime.now()
   
   @property
   def id(self) -> str:
@@ -32,7 +32,7 @@ class BlogEntity:
   @title.setter
   def title(self, value: str):
     self.__title = Title(value)
-    self.__updated_at = datetime.now().isoformat()
+    self.__updated_at = datetime.now()
 
   @property
   def content(self) -> str:
@@ -41,7 +41,7 @@ class BlogEntity:
   @content.setter
   def content(self, value: str):
     self.__content = Content(value)
-    self.__updated_at = datetime.now().isoformat()
+    self.__updated_at = datetime.now()
 
   @property
   def author_id(self) -> str:
@@ -54,14 +54,14 @@ class BlogEntity:
   @hero_image.setter
   def hero_image(self, value: Optional[str]):
     self.__hero_image = value
-    self.__updated_at = datetime.now().isoformat()
+    self.__updated_at = datetime.now()
 
   @property
-  def created_at(self) -> str:
+  def created_at(self) -> datetime:
     return self.__created_at
   
   @property
-  def updated_at(self) -> str:
+  def updated_at(self) -> datetime:
     return self.__updated_at
   
   def to_dict(self) -> dict:

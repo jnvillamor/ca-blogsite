@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime, timezone
 from src.application.dto import CreateBlogDTO, BlogResponseDTO
 from src.application.use_cases.blog import CreateBlogUseCase
 from src.domain.entities import UserEntity
@@ -39,10 +40,10 @@ def existing_user():
     first_name="Alice",
     last_name="Smith",
     username="alicesmith",
-    password_hash="hashedpassword",
+    password="hashedpassword",
     avatar=None,
-    created_at="2024-01-01T00:00:00Z",
-    updated_at="2024-01-01T00:00:00Z"
+    created_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+    updated_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
   )
 
 class TestCreateBlogUseCase:

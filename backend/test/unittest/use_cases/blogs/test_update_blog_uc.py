@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime, timezone
 from src.application.dto import UpdateBlogDTO, BlogResponseDTO
 from src.application.use_cases.blog import UpdateBlogUseCase
 from src.domain.entities import BlogEntity
@@ -24,8 +25,8 @@ def blog_data():
     content="Original content.",
     author_id="author-123",
     hero_image="http://example.com/original_hero.jpg",
-    created_at="2024-01-01T00:00:00Z",
-    updated_at="2024-01-01T00:00:00Z"
+    created_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+    updated_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
   )
 
 class TestUpdateBlogUseCase:

@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime, timezone
 from fastapi.testclient import TestClient
 
 class TestGetUserEndpoint:
@@ -50,7 +51,17 @@ class TestGetUserEndpoint:
     data = response.json()
     expected_user = next(user for user in existing_users if user["id"] == user_id)
     for key in expected_user:
-      if key != "password":
+      if key == "created_at" or key == "updated_at":
+        actual_raw = data[key]
+        actual_dt = datetime.fromisoformat(actual_raw.replace("Z", "+00:00"))
+
+        print("KEY:", key)
+        print("ACTUAL RAW:", actual_raw, type(actual_raw))
+        print("ACTUAL DT:", actual_dt, actual_dt.tzinfo)
+        print("EXPECTED:", expected_user[key], expected_user[key].tzinfo)
+
+        assert actual_dt == expected_user[key] 
+      elif key != "password":
         assert data[key] == expected_user[key]
 
   def test_get_user_by_id_not_found(
@@ -86,7 +97,9 @@ class TestGetUserEndpoint:
     data = response.json()
     expected_user = next(user for user in existing_users if user["username"] == username)
     for key in expected_user:
-      if key != "password":
+      if key == "created_at" or key == "updated_at":
+        assert data[key] == expected_user[key].isoformat()
+      elif key != "password":
         assert data[key] == expected_user[key]
   
   def test_get_user_by_username_not_found(

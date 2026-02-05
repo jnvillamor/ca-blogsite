@@ -59,7 +59,7 @@ class IUserRepository(ABC):
     pass
   
   @abstractmethod
-  def update_user(self, user_id: str, user: UserEntity) -> UserEntity:
+  def update_user(self, user_id: str, user: UserEntity) -> Optional[UserEntity]:
     """Update an existing user.
 
     Args:
@@ -71,7 +71,7 @@ class IUserRepository(ABC):
     pass
   
   @abstractmethod
-  def delete_user(self, user_id: str) -> None:
+  def delete_user(self, user_id: str) -> bool:
     """Delete a user by their ID.
 
     Args:

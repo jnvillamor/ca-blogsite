@@ -1,5 +1,6 @@
 import copy
 import pytest
+from datetime import datetime, timezone
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
@@ -19,8 +20,8 @@ EXISTING_USERS = [
     "last_name": "Smith",
     "username": "alicesmith",
     "password": "SecurePass.123",
-    "created_at": "2024-01-01T00:00:00Z",
-    "updated_at": "2024-01-01T00:00:00Z"
+    "created_at": datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+    "updated_at": datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
   },
   {
     "id": "user2",
@@ -28,8 +29,8 @@ EXISTING_USERS = [
     "last_name": "Johnson",
     "username": "bobjohnson",
     "password": "SecurePass.123",
-    "created_at": "2024-01-02T00:00:00Z",
-    "updated_at": "2024-01-02T00:00:00Z"
+    "created_at": datetime(2024, 1, 2, 0, 0, 0, tzinfo=timezone.utc),
+    "updated_at": datetime(2024, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
   },
   {
     "id": "user3",
@@ -37,8 +38,8 @@ EXISTING_USERS = [
     "last_name": "Brown",
     "username": "charliebrown",
     "password": "SecurePass.123",      
-    "created_at": "2024-01-03T00:00:00Z",
-    "updated_at": "2024-01-03T00:00:00Z"
+    "created_at": datetime(2024, 1, 3, 0, 0, 0, tzinfo=timezone.utc),
+    "updated_at": datetime(2024, 1, 3, 0, 0, 0, tzinfo=timezone.utc)
   }
 ]
 

@@ -16,8 +16,8 @@ class UserEntity:
     username: str,
     password: str,
     avatar: Optional[str] = None,
-    created_at: Optional[str] = None,
-    updated_at: Optional[str] = None
+    created_at: Optional[datetime] = None,
+    updated_at: Optional[datetime] = None
   ):
     self.__id = id
     self.__first_name = FirstName(first_name) 
@@ -25,8 +25,8 @@ class UserEntity:
     self.__username = Username(username)
     self.__password = Password(password) 
     self.__avatar = avatar
-    self.__created_at = created_at or datetime.now(timezone.utc).isoformat()
-    self.__updated_at = updated_at or datetime.now(timezone.utc).isoformat()
+    self.__created_at = created_at or datetime.now(timezone.utc)
+    self.__updated_at = updated_at or datetime.now(timezone.utc)
   
   @property
   def id(self) -> str:
@@ -39,7 +39,7 @@ class UserEntity:
   @first_name.setter
   def first_name(self, value: str):
     self.__first_name = FirstName(value)
-    self.__updated_at = datetime.now(timezone.utc).isoformat()
+    self.__updated_at = datetime.now(timezone.utc)
 
   @property
   def last_name(self) -> str:
@@ -48,8 +48,7 @@ class UserEntity:
   @last_name.setter
   def last_name(self, value: str):
     self.__last_name = LastName(value)
-    self.__updated_at = datetime.now(timezone.utc).isoformat()
-
+    self.__updated_at = datetime.now(timezone.utc)
   @property
   def username(self) -> str:
     return self.__username.value
@@ -57,8 +56,7 @@ class UserEntity:
   @username.setter
   def username(self, value: str):
     self.__username = Username(value)
-    self.__updated_at = datetime.now(timezone.utc).isoformat()
-
+    self.__updated_at = datetime.now(timezone.utc)
   @property
   def password(self) -> str:
     return self.__password.value
@@ -66,7 +64,7 @@ class UserEntity:
   @password.setter
   def password(self, hashed_password: str):
     self.__password = Password(hashed_password)
-    self.__updated_at = datetime.now(timezone.utc).isoformat()
+    self.__updated_at = datetime.now(timezone.utc)
   
   @property
   def avatar(self) -> Optional[str]:
@@ -75,14 +73,14 @@ class UserEntity:
   @avatar.setter
   def avatar(self, avatar_url: Optional[str]):
     self.__avatar = avatar_url
-    self.__updated_at = datetime.now(timezone.utc).isoformat()
+    self.__updated_at = datetime.now(timezone.utc)
   
   @property
-  def created_at(self) -> str:
+  def created_at(self) -> datetime:
     return self.__created_at
   
   @property
-  def updated_at(self) -> str:
+  def updated_at(self) -> datetime:
     return self.__updated_at
     
   def to_dict(self) -> dict:

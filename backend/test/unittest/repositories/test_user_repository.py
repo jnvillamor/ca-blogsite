@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime, timezone
 from sqlalchemy.orm import  Session
 from app.repositories import UserRepository
 from src.domain.entities import UserEntity
@@ -10,8 +11,8 @@ def make_user(
   username: str = "johndoe",
   password: str = "securepassword",
   avatar=None,
-  created_at="2024-01-01T00:00:00Z",
-  updated_at="2024-01-01T00:00:00Z"
+  created_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+  updated_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
 ) -> UserEntity:
   return UserEntity(
     id=id,
@@ -24,6 +25,11 @@ def make_user(
     updated_at=updated_at
   )
 
+def _normalize_datetime(dt: datetime) -> datetime:
+  if dt.tzinfo is None:
+    return dt.replace(tzinfo=timezone.utc)
+  return dt
+
 
 def assert_user_equal(entity1: UserEntity, entity2: UserEntity):
   assert entity1.id == entity2.id
@@ -32,8 +38,8 @@ def assert_user_equal(entity1: UserEntity, entity2: UserEntity):
   assert entity1.last_name == entity2.last_name
   assert entity1.password == entity2.password
   assert entity1.avatar == entity2.avatar
-  assert entity1.created_at == entity2.created_at
-  assert entity1.updated_at == entity2.updated_at
+  assert _normalize_datetime(entity1.created_at) == _normalize_datetime(entity2.created_at)
+  assert _normalize_datetime(entity1.updated_at) == _normalize_datetime(entity2.updated_at)
 
 
 # -------------------------
@@ -48,10 +54,12 @@ class TestUserRepository:
 
     # get by id
     retrieved = repo.get_user_by_id("123")
+    assert retrieved is not None
     assert_user_equal(retrieved, user)
 
     # get by username
     retrieved_by_username = repo.get_user_by_username("johndoe")
+    assert retrieved_by_username is not None
     assert_user_equal(retrieved_by_username, user)
 
   def test_get_all_users(self, db_session: Session):
@@ -76,10 +84,11 @@ class TestUserRepository:
       first_name="New",
       last_name="Name",
       username="newuser",
-      updated_at="2024-01-08T00:00:00Z"
+      updated_at=datetime(2024, 2, 2, 0, 0, 0, tzinfo=timezone.utc)
     )
 
     result = repo.update_user("999", updated_user)
+    assert result is not None
     assert_user_equal(result, updated_user)
 
   @pytest.mark.parametrize("user_id", ["nonexistent"])

@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from app.database.mappers import user_entity_to_model
@@ -22,8 +23,8 @@ def create_test_user(db_session: Session):
       username=username,
       avatar="https://example.com/avatar.png",
       password=hashed_password,
-      created_at="2024-01-01T00:00:00Z",
-      updated_at="2024-01-01T00:00:00Z"
+      created_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+      updated_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
     )
     user_model = user_entity_to_model(test_user)
     db_session.add(user_model)

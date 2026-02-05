@@ -1,9 +1,9 @@
 import pytest
+from datetime import datetime, timezone
 from src.application.dto import ChangePasswordDTO, UserResponseDTO
 from src.application.use_cases.users import ChangePasswordUseCase
 from src.domain.entities import UserEntity
 from src.domain.exceptions import NotFoundException, InvalidDataException
-from src.domain.value_objects import Password
 
 @pytest.fixture
 def create_existing_user():
@@ -14,8 +14,8 @@ def create_existing_user():
     username="johndoe",
     avatar=None,
     password="oldpass",
-    created_at="2024-01-01T00:00:00Z",
-    updated_at="2024-01-01T00:00:00Z",
+    created_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+    updated_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
   )
 
 @pytest.fixture

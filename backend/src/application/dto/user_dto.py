@@ -1,5 +1,6 @@
-from pydantic import BaseModel
-from  typing import Optional
+from pydantic import BaseModel, field_serializer
+from typing import Optional
+from datetime import datetime, timezone
 
 class CreateUserDTO(BaseModel):
   first_name: str
@@ -25,9 +26,16 @@ class UserResponseDTO(BaseModel):
   last_name: str
   username: str
   avatar: Optional[str] = None
-  created_at: str
-  updated_at: str
+  created_at: datetime
+  updated_at: datetime
   
   model_config = {
     'from_attributes': True
   }
+
+  @field_serializer("created_at", "updated_at")
+  def serialize_dt(self, value: datetime) -> str:
+    # SQLite gives naive datetime → force UTC
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value.isoformat()

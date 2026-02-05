@@ -1,1 +1,2 @@
 from .user_mapper import user_entity_to_model, user_model_to_entity
+from .blog_mapper import blog_entity_to_model, blog_model_to_entity

@@ -54,9 +54,9 @@ class TestGetUserUseCase:
     
   def test_get_by_id_success(
     self, 
-    use_case: GetUserUseCase, 
-    user_repository: IUserRepository, 
-    valid_user_data: UserEntity
+    use_case, 
+    user_repository, 
+    valid_user_data
   ):
     # Arrange
     user_repository.get_user_by_id.return_value = valid_user_data
@@ -70,8 +70,8 @@ class TestGetUserUseCase:
     
   def test_get_by_id_not_found(
     self, 
-    use_case: GetUserUseCase, 
-    user_repository: IUserRepository
+    use_case, 
+    user_repository
   ):
     # Arrange
     user_repository.get_user_by_id.return_value = None
@@ -85,9 +85,9 @@ class TestGetUserUseCase:
     
   def test_get_by_username_success(
     self,
-    use_case: GetUserUseCase,
-    user_repository: IUserRepository,
-    valid_user_data: UserEntity
+    use_case,
+    user_repository,
+    valid_user_data
   ):
     # Arrange
     user_repository.get_user_by_username.return_value = valid_user_data
@@ -101,8 +101,8 @@ class TestGetUserUseCase:
   
   def test_by_username_not_found(
     self,
-    use_case: GetUserUseCase,
-    user_repository: IUserRepository
+    use_case,
+    user_repository
   ):
     # Arrange
     user_repository.get_user_by_username.return_value = None
@@ -116,9 +116,9 @@ class TestGetUserUseCase:
   
   def test_get_all_users(
     self,
-    use_case: GetUserUseCase,
-    user_repository: IUserRepository,
-    valid_users_list: list[UserEntity]
+    use_case,
+    user_repository,
+    valid_users_list
   ):
     # Arrange
     pagination = PaginationDTO(skip=0, limit=10, search=None)

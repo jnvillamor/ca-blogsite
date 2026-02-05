@@ -6,7 +6,7 @@ from app.services import PasswordHasher
 from src.domain.entities import UserEntity
 
 @pytest.fixture
-def create_test_user(db_session: Session) -> callable:
+def create_test_user(db_session: Session):
   def _create_test_user(
     id: str = "test-user-id", 
     first_name: str = "Test", 

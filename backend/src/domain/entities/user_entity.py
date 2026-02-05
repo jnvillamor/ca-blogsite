@@ -33,7 +33,7 @@ class UserEntity:
     return self.__id
   
   @property
-  def first_name(self) -> FirstName:
+  def first_name(self) -> str:
     return self.__first_name.value
   
   @first_name.setter
@@ -42,7 +42,7 @@ class UserEntity:
     self.__updated_at = datetime.now(timezone.utc).isoformat()
 
   @property
-  def last_name(self) -> LastName:
+  def last_name(self) -> str:
     return self.__last_name.value
   
   @last_name.setter
@@ -51,7 +51,7 @@ class UserEntity:
     self.__updated_at = datetime.now(timezone.utc).isoformat()
 
   @property
-  def username(self) -> Username:
+  def username(self) -> str:
     return self.__username.value
   
   @username.setter
@@ -60,7 +60,7 @@ class UserEntity:
     self.__updated_at = datetime.now(timezone.utc).isoformat()
 
   @property
-  def password(self) -> Password:
+  def password(self) -> str:
     return self.__password.value
   
   @password.setter

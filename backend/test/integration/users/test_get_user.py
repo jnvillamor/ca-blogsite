@@ -14,7 +14,7 @@ class TestGetUserUseCase:
   def test_get_by_id_existing_user(
     self, 
     get_user_use_case: GetUserUseCase, 
-    create_test_user: callable
+    create_test_user
   ):
     test_user: UserEntity = create_test_user()
     
@@ -35,7 +35,7 @@ class TestGetUserUseCase:
   def test_get_by_username_existing_user(
     self,
     get_user_use_case: GetUserUseCase,
-    create_test_user: callable
+    create_test_user
   ):
     test_user: UserEntity = create_test_user()
     
@@ -56,7 +56,7 @@ class TestGetUserUseCase:
   def test_get_all_users(
     self, 
     get_user_use_case: GetUserUseCase, 
-    create_test_user: callable
+    create_test_user
   ):
     test_user1: UserEntity = create_test_user()
     test_user2: UserEntity = create_test_user(

@@ -59,7 +59,7 @@ class IUserRepository(ABC):
     pass
   
   @abstractmethod
-  def update_user(self, user_id: str, user: UserEntity) -> Optional[UserEntity]:
+  def update_user(self, user_id: str, user: UserEntity) -> UserEntity:
     """Update an existing user.
 
     Args:

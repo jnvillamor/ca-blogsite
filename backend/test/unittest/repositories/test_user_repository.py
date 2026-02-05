@@ -2,6 +2,7 @@ import pytest
 from datetime import datetime, timezone
 from sqlalchemy.orm import  Session
 from app.repositories import UserRepository
+from src.domain.exceptions import NotFoundException
 from src.domain.entities import UserEntity
 
 def make_user(
@@ -94,12 +95,11 @@ class TestUserRepository:
   @pytest.mark.parametrize("user_id", ["nonexistent"])
   def test_nonexistent_user(self, db_session: Session, user_id):
     repo = UserRepository(db_session)
-
     assert repo.get_user_by_id(user_id) is None
-    assert repo.get_user_by_username(user_id) is None
-
-    user = make_user(user_id)
-    assert repo.update_user(user_id, user) is None
+    assert repo.get_user_by_username("nonexistent") is None
+    with pytest.raises(NotFoundException):
+      repo.update_user(user_id, make_user(user_id))
+    assert not repo.delete_user(user_id)
 
   def test_delete_user(self, db_session: Session):
     repo = UserRepository(db_session)

@@ -1,5 +1,7 @@
 from app.database.mappers import user_entity_to_model, user_model_to_entity
 from app.database.models import UserModel
+from src.domain.exceptions import NotFoundException
+from src.domain.entities.user_entity import UserEntity
 from src.application.repositories import IUserRepository
 from sqlalchemy.orm import Session
 
@@ -40,18 +42,16 @@ class UserRepository(IUserRepository):
     users = query.offset(skip).limit(limit).all()
     return [user_model_to_entity(user) for user in users], total
 
-  def update_user(self, user_id, user):
-    user_model = self.session.get(UserModel, user_id)
-    if not user_model:
-      return None
+  def update_user(self, user_id: str, user: UserEntity) -> UserEntity:
+    existing_user = self.session.get(UserModel, user_id)
+    if not existing_user:
+      raise NotFoundException("User", f"user_id: {user_id}")
     
-    for key, _ in user_model.__dict__.items():
-      if hasattr(user, key):
-        setattr(user_model, key, user.to_dict()[key])
+    for field in user.to_dict():
+      setattr(existing_user, field, getattr(user, field))
     
     self.session.flush()
-    
-    return user_model_to_entity(user_model)
+    return user_model_to_entity(existing_user)
   
   def delete_user(self, user_id):
     user_model = self.session.get(UserModel, user_id)

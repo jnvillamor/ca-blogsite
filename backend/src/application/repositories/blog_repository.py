@@ -81,7 +81,7 @@ class IBlogRepository(ABC):
     pass
 
   @abstractmethod
-  def delete_blog(self, blog_id: str) -> None:
+  def delete_blog(self, blog_id: str) -> bool:
     """Delete a blog by its ID.
 
     Args:

@@ -26,3 +26,19 @@ class GetBlogUseCase:
       limit=pagination.limit,
       items=blog_dtos
     )
+  
+  def get_all_blogs_by_author(self, author_id: str, pagination: PaginationDTO) -> PaginationResponseDTO[BlogResponseDTO]:
+    blogs, count = self.blog_repository.get_all_blogs_by_author(
+      author_id=author_id,
+      skip=pagination.skip,
+      limit=pagination.limit,
+      search=pagination.search
+    )
+
+    blog_dtos = [BlogResponseDTO.model_validate(blog.to_dict()) for blog in blogs]
+    return PaginationResponseDTO(
+      total=count,
+      skip=pagination.skip,
+      limit=pagination.limit,
+      items=blog_dtos
+    )

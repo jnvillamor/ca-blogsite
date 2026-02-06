@@ -20,7 +20,7 @@ class TestChangePasswordUseCase:
     self,
     db_session: Session,
     change_password_use_case: ChangePasswordUseCase,
-    create_test_user: callable,
+    create_test_user,
   ):
     test_user = create_test_user()
 

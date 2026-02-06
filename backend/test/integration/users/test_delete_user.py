@@ -15,7 +15,7 @@ class TestDeleteUserUseCase:
   def test_delete_user_success(
     self,
     db_session: Session,
-    create_test_user: callable,
+    create_test_user,
     delete_user_use_case: DeleteUserUseCase,
   ):
     test_user: UserEntity = create_test_user()

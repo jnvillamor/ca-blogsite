@@ -72,3 +72,53 @@ class TestGetUserUseCase:
     assert result.total >= 2
     assert any(user.id == test_user1.id for user in result.items)
     assert any(user.id == test_user2.id for user in result.items)
+
+  @pytest.mark.parametrize(
+    "pagination, expected_count, item_count",
+    [
+      (PaginationDTO(skip=0, limit=10), 5, 5),
+      (PaginationDTO(skip=0, limit=3), 5, 3),
+      (PaginationDTO(skip=3, limit=3), 5, 2),
+      (PaginationDTO(skip=0, limit=10, search="Test"), 4, 4),
+      (PaginationDTO(skip=0, limit=10, search="Another"), 1, 1),
+      (PaginationDTO(skip=0, limit=10, search="Non-existing"), 0, 0)
+    ]
+  )
+  def test_get_all_users_with_pagination_and_search(
+    self,
+    get_user_use_case: GetUserUseCase,
+    create_test_user,
+    pagination: PaginationDTO,
+    expected_count: int,
+    item_count: int
+  ):
+    create_test_user()
+    create_test_user(
+      id="test-user-id-2", 
+      first_name="Another", 
+      last_name="User", 
+      username="anotheruser"
+    )
+    create_test_user(
+      id="test-user-id-3", 
+      first_name="Test3", 
+      last_name="User", 
+      username="testuser3"
+    )
+    create_test_user(
+      id="test-user-id-4", 
+      first_name="Test4", 
+      last_name="User", 
+      username="testuser4"
+    )
+    create_test_user(
+      id="test-user-id-5", 
+      first_name="Test5", 
+      last_name="User", 
+      username="testuser5"
+    )
+
+    result: PaginationResponseDTO = get_user_use_case.get_all_users(pagination)
+    
+    assert result.total == expected_count
+    assert len(result.items) == item_count

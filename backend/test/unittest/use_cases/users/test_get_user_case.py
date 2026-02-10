@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime, timezone
 from src.application.dto import PaginationDTO, PaginationResponseDTO, UserResponseDTO
 from src.application.use_cases.users import GetUserUseCase
 from src.application.repositories import IUserRepository
@@ -23,8 +24,8 @@ class TestGetUserUseCase:
       username='johndoe',
       password='hashedpassword',
       avatar='',
-      created_at='2024-01-01T00:00:00Z',
-      updated_at='2024-01-01T00:00:00Z'
+      created_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+      updated_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
     )
   
   @pytest.fixture
@@ -37,8 +38,8 @@ class TestGetUserUseCase:
         username='johndoe',
         password='hashedpassword',
         avatar='',
-        created_at='2024-01-01T00:00:00Z',
-        updated_at='2024-01-01T00:00:00Z'
+        created_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+        updated_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
       ),
       UserEntity(
         id='124',
@@ -47,8 +48,8 @@ class TestGetUserUseCase:
         username='janesmith',
         password='hashedpassword2',
         avatar='',
-        created_at='2024-01-02T00:00:00Z',
-        updated_at='2024-01-02T00:00:00Z'
+        created_at=datetime(2024, 1, 2, 0, 0, 0, tzinfo=timezone.utc),
+        updated_at=datetime(2024, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
       )
     ]
     
@@ -131,6 +132,34 @@ class TestGetUserUseCase:
     expected_dtos = [UserResponseDTO.model_validate(user.to_dict()) for user in valid_users_list]
     assert result == PaginationResponseDTO(
       total=len(valid_users_list),
+      skip=pagination.skip,
+      limit=pagination.limit,
+      items=expected_dtos
+    )
+    user_repository.get_all_users.assert_called_once_with(
+      skip=pagination.skip,
+      limit=pagination.limit,
+      search=pagination.search
+    )
+  
+  def test_get_all_users_with_search(
+    self,
+    use_case,
+    user_repository,
+    valid_users_list
+  ):
+    # Arrange
+    pagination = PaginationDTO(skip=0, limit=10, search='john')
+    filtered_users = [user for user in valid_users_list if 'john' in user.username]
+    user_repository.get_all_users.return_value = (filtered_users, len(filtered_users))
+    
+    # Act
+    result = use_case.get_all_users(pagination)
+    
+    # Assert
+    expected_dtos = [UserResponseDTO.model_validate(user.to_dict()) for user in filtered_users]
+    assert result == PaginationResponseDTO(
+      total=len(filtered_users),
       skip=pagination.skip,
       limit=pagination.limit,
       items=expected_dtos

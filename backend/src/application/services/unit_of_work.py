@@ -9,7 +9,7 @@ class IUnitOfWork(ABC):
   blogs: IBlogRepository
   
   @abstractmethod
-  def __enter__(self):
+  def __enter__(self) -> 'IUnitOfWork':
     pass
   
   @abstractmethod

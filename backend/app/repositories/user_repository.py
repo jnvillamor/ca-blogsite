@@ -33,7 +33,6 @@ class UserRepository(IUserRepository):
     if search:
       query = query.filter(
         (UserModel.username.ilike(f"%{search}%")) |
-        (UserModel.email.ilike(f"%{search}%")) |
         (UserModel.first_name.ilike(f"%{search}%")) |
         (UserModel.last_name.ilike(f"%{search}%"))
       )

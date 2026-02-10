@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime, timezone
 from src.application.dto import PaginationDTO, BlogResponseDTO, PaginationResponseDTO
 from src.application.use_cases.blog import GetBlogUseCase
 from src.domain.entities import BlogEntity
@@ -20,8 +21,8 @@ class TestGetBlogUseCase:
       title='Test Blog',
       content='This is a test blog content.',
       author_id='author-123',
-      created_at='2024-01-01T00:00:00Z',
-      updated_at='2024-01-01T00:00:00Z'
+      created_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+      updated_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
     )
   
   @pytest.fixture
@@ -32,16 +33,16 @@ class TestGetBlogUseCase:
         title='Test Blog 1',
         content='This is the first test blog content.',
         author_id='author-123',
-        created_at='2024-01-01T00:00:00Z',
-        updated_at='2024-01-01T00:00:00Z'
+        created_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+        updated_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
       ),
       BlogEntity(
         id='blog-124',
         title='Test Blog 2',
         content='This is the second test blog content.',
         author_id='author-124',
-        created_at='2024-01-02T00:00:00Z',
-        updated_at='2024-01-02T00:00:00Z'
+        created_at=datetime(2024, 1, 2, 0, 0, 0, tzinfo=timezone.utc),
+        updated_at=datetime(2024, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
       )
     ]
     
@@ -93,6 +94,61 @@ class TestGetBlogUseCase:
     expected_response = PaginationResponseDTO(
       items=[BlogResponseDTO.model_validate(blog.to_dict()) for blog in valid_blogs_list],
       total=len(valid_blogs_list),
+      skip=pagination.skip,
+      limit=pagination.limit
+    )
+    assert result == expected_response
+    blog_repository.get_all_blogs.assert_called_once_with(
+      skip=pagination.skip,
+      limit=pagination.limit,
+      search=pagination.search
+    )
+  
+  def test_get_all_blogs_empty(
+    self, 
+    use_case, 
+    blog_repository
+  ):
+    # Arrange
+    pagination = PaginationDTO(skip=0, limit=10, search=None)
+    blog_repository.get_all_blogs.return_value = ([], 0)
+    
+    # Act
+    result = use_case.get_all_blogs(pagination)
+
+    # Assert
+    expected_response = PaginationResponseDTO(
+      items=[],
+      total=0,
+      skip=pagination.skip,
+      limit=pagination.limit
+    )
+    assert result == expected_response
+    blog_repository.get_all_blogs.assert_called_once_with(
+      skip=pagination.skip,
+      limit=pagination.limit,
+      search=pagination.search
+    )
+
+  def test_get_all_blogs_with_search(
+    self, 
+    use_case, 
+    blog_repository, 
+    valid_blogs_list
+  ):
+    # Arrange
+    search_query = 'Test Blog 1'
+    pagination = PaginationDTO(skip=0, limit=10, search=search_query)
+    filtered_blogs = [blog for blog in valid_blogs_list if search_query in blog.title]
+    blog_repository.get_all_blogs.return_value = (filtered_blogs, len(filtered_blogs))
+    
+    # Act
+    result = use_case.get_all_blogs(pagination)
+
+    # Assert
+    expected_response = PaginationResponseDTO(
+      items=[BlogResponseDTO.model_validate(blog.to_dict()) for blog in filtered_blogs],
+      total=len(filtered_blogs),
       skip=pagination.skip,
       limit=pagination.limit
     )

@@ -104,6 +104,31 @@ class TestBlogRepository:
     blogs_user456_search, total_user456_search = repo.get_all_blogs_by_author("user456", search="Blog 1")
     assert total_user456_search == 0
     assert len(blogs_user456_search) == 0
+  
+  def test_get_all_blogs_with_search(self, db_session: Session):
+    repo = BlogRepository(db_session)
+    # create blogs with different titles
+    for i in range(10):
+      blog = BlogEntity(
+        id=f"blog{i}",
+        title=f"Test Blog {i}",
+        content="Content",
+        author_id="user123",
+        created_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+        updated_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+      )
+      repo.create_blog(blog)
+
+    blogs_search, total_search = repo.get_all_blogs(search="Test Blog 1")
+    assert total_search == 1  # Test Blog 1
+    assert len(blogs_search) == 1
+    assert blogs_search[0].id == "blog1"
+
+    blogs_search, total_search = repo.get_all_blogs(search="Test Blog")
+    assert total_search == 10  # All blogs match
+    assert len(blogs_search) == 10
+    for i in range(10):
+      assert blogs_search[i].id == f"blog{i}"
 
   def test_update_blog(self, db_session: Session):
     repo = BlogRepository(db_session)

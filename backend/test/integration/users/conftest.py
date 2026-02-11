@@ -1,13 +1,14 @@
 import pytest
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
+from typing import Callable
 
 from app.database.mappers import user_entity_to_model
 from app.services import PasswordHasher
 from src.domain.entities import UserEntity
 
 @pytest.fixture
-def create_test_user(db_session: Session):
+def create_test_user(db_session: Session) -> Callable[..., UserEntity]:
   def _create_test_user(
     id: str = "test-user-id", 
     first_name: str = "Test", 

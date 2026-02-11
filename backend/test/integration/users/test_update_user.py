@@ -1,5 +1,6 @@
 import pytest
 from sqlalchemy.orm import Session
+from typing import Callable
 from app.database.unit_of_work import UnitOfWork
 from src.application.dto import UpdateUserDTO
 from src.application.use_cases.users import UpdateUserUseCase
@@ -16,7 +17,7 @@ class TestUpdateUserUseCase:
   def test_update_user_success(
     self,
     update_user_use_case: UpdateUserUseCase,
-    create_test_user: callable
+    create_test_user: Callable[..., UserEntity]
   ):
     test_user: UserEntity = create_test_user()
     
@@ -69,7 +70,7 @@ class TestUpdateUserUseCase:
   def test_update_user_invalid_names(
     self,
     update_user_use_case: UpdateUserUseCase,
-    create_test_user: callable,
+    create_test_user: Callable[..., UserEntity],
     field: str,
     invalid_value: str,
     error_regex: str
@@ -86,7 +87,7 @@ class TestUpdateUserUseCase:
   def test_update_user_duplicate_username(
     self,
     update_user_use_case: UpdateUserUseCase,
-    create_test_user: callable
+    create_test_user: Callable[..., UserEntity]
   ):
     user1: UserEntity = create_test_user(
       id="user1",

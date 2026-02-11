@@ -1,9 +1,10 @@
 import pytest
 from sqlalchemy.orm import Session
+from typing import Callable
 from app.database.models import BlogModel, UserModel
 
 @pytest.fixture
-def create_test_user(db_session):
+def create_test_user(db_session) -> Callable[..., UserModel]:
   def _create_test_user(
     id: str = "test-user-id", 
     first_name: str = "Test", 
@@ -25,7 +26,7 @@ def create_test_user(db_session):
   return _create_test_user
 
 @pytest.fixture
-def create_test_blog(db_session):
+def create_test_blog(db_session) -> Callable[..., BlogModel]:
   def _create_test_blog(
     id: str = "test-blog-id",
     title: str = "Test Blog Title",

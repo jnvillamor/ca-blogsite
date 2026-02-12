@@ -1,5 +1,5 @@
 import pytest
-from src.application.use_cases.blog import DeleteBlogUseCase
+from src.application.use_cases.blogs import DeleteBlogUseCase
 from src.domain.exceptions import NotFoundException
 
 @pytest.fixture

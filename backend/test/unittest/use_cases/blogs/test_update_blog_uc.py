@@ -1,7 +1,7 @@
 import pytest
 from datetime import datetime, timezone
 from src.application.dto import UpdateBlogDTO, BlogResponseDTO
-from src.application.use_cases.blog import UpdateBlogUseCase
+from src.application.use_cases.blogs import UpdateBlogUseCase
 from src.domain.entities import BlogEntity
 from src.domain.exceptions import NotFoundException, InvalidDataException
 

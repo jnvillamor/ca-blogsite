@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.database.unit_of_work import UnitOfWork
 from app.services import UuidGenerator
 from src.application.dto import CreateBlogDTO
-from src.application.use_cases.blog import CreateBlogUseCase
+from src.application.use_cases.blogs import CreateBlogUseCase
 from src.domain.exceptions import NotFoundException
 
 @pytest.fixture

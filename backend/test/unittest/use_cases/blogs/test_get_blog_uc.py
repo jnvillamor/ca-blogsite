@@ -1,7 +1,7 @@
 import pytest
 from datetime import datetime, timezone
 from src.application.dto import PaginationDTO, BlogResponseDTO, PaginationResponseDTO
-from src.application.use_cases.blog import GetBlogUseCase
+from src.application.use_cases.blogs import GetBlogUseCase
 from src.domain.entities import BlogEntity
 
 class TestGetBlogUseCase:

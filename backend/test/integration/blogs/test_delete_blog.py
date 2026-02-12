@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy.orm import Session
 from app.database.models import BlogModel
 from app.database.unit_of_work import UnitOfWork
-from src.application.use_cases.blog import DeleteBlogUseCase
+from src.application.use_cases.blogs import DeleteBlogUseCase
 
 @pytest.fixture
 def delete_blog_use_case(db_session: Session) -> DeleteBlogUseCase:

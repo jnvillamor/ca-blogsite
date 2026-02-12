@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.repositories import BlogRepository
-from src.application.use_cases.blog import GetBlogUseCase
+from src.application.use_cases.blogs import GetBlogUseCase
 from src.application.dto import PaginationDTO, PaginationResponseDTO
 
 

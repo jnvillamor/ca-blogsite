@@ -4,7 +4,7 @@ from typing import Callable
 from app.database.models import BlogModel, UserModel
 from app.database.unit_of_work import UnitOfWork
 from src.application.dto import UpdateBlogDTO
-from src.application.use_cases.blog import UpdateBlogUseCase
+from src.application.use_cases.blogs import UpdateBlogUseCase
 from src.domain.exceptions import NotFoundException
 
 @pytest.fixture

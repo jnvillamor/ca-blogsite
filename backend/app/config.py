@@ -5,6 +5,10 @@ class Configurations(BaseSettings):
   DATABASE_URL: str = "sqlite:///./test.db"
   DEBUG: bool = True
   DB_ECHO: bool = False
+  SECRET_KEY: str = "your_secret_key"
+  ALGORITHM: str = "HS256"
+  DEFAULT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+  DEFAULT_REFRESH_TOKEN_EXPIRE_DAYS: int = 1
   
   model_config = SettingsConfigDict(
     env_file=".env",

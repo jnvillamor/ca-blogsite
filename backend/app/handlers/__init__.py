@@ -1,9 +1,11 @@
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
-from .domain import register_exception_handler
+from .domain_exception_handler import register_domain_exception_handler 
 import logging
 
-def register_handlers(app: FastAPI, logger: logging.Logger = None):
+logger = logging.getLogger(__name__)
+
+def register_handlers(app: FastAPI, logger: logging.Logger = logger):
   @app.exception_handler(Exception)
   def handle_generic_exception(request: Request, exc: Exception):
     return JSONResponse(
@@ -11,4 +13,4 @@ def register_handlers(app: FastAPI, logger: logging.Logger = None):
       content={"detail": "An unexpected error occurred."}
     )
 
-  register_exception_handler(app, logger=logger)
+  register_domain_exception_handler(app, logger=logger)

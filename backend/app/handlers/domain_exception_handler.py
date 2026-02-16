@@ -7,10 +7,9 @@ from src.domain.exceptions import (
   NotFoundException
 )
 
-def register_exception_handler(app: FastAPI, logger: logging.Logger = None):
-  if logger is None:
-    logger = logging.getLogger("uvicorn.error")
-  
+default_logger = logging.getLogger("uvicorn.error")
+
+def register_domain_exception_handler(app: FastAPI, logger: logging.Logger = default_logger):
   @app.exception_handler(InvalidDataException)
   def handle_invalid_data_exception(request: Request, exc: InvalidDataException):
     logger.error(f"InvalidDataException: {str(exc)}")

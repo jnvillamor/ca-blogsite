@@ -11,3 +11,5 @@ sqlalchemy
 alembic
 httpx
 psycopg2-binary
+pyjwt
+python-multipart

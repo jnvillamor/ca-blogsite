@@ -1,4 +1,5 @@
 import pytest 
+from datetime import datetime, timezone
 from src.application.dto import CreateUserDTO, UserResponseDTO
 from src.application.use_cases.users import CreateUserUseCase
 from src.domain.exceptions import UsernameExistsException, InvalidDataException
@@ -44,8 +45,8 @@ class TestCreateUserUseCase:
       last_name="Doe",
       username="johndoe",
       avatar=None,
-      created_at="2024-01-01T00:00:00Z",
-      updated_at="2024-01-01T00:00:00Z"
+      created_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+      updated_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
     )
   
   def test_execute_success(
@@ -85,7 +86,7 @@ class TestCreateUserUseCase:
     existing_user_data
   ):
     # Arrange
-    uow.users.get_users_by_username.return_value = existing_user_data
+    uow.users.get_user_by_username.return_value = existing_user_data
     
     # Act & Assert
     with pytest.raises(UsernameExistsException, match=f"The username '{valid_user_data.username}' is already taken.") as exc_info:

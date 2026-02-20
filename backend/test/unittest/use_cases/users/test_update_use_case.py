@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from src.application.dto import UpdateUserDTO, UserResponseDTO
 from src.application.use_cases.users import UpdateUserUseCase
 from src.domain.entities import UserEntity
-from src.domain.exceptions import NotFoundException, InvalidDataException
+from src.domain.exceptions import NotFoundException, InvalidDataException, UnauthorizedException
 
 TEST_DATA = [
   (
@@ -105,6 +105,7 @@ class TestUpdateUserUseCase:
     
     # Act
     result = use_case.execute(
+      active_user=existing_user,
       user_id="user_id_123",
       data=update_data
     )
@@ -126,6 +127,7 @@ class TestUpdateUserUseCase:
     self, 
     use_case, 
     uow,
+    existing_user,
     valid_update_data
   ):
     # Arrange
@@ -135,6 +137,7 @@ class TestUpdateUserUseCase:
     # Act & Assert
     with pytest.raises(NotFoundException) as exc_info:
       use_case.execute(
+        active_user=existing_user,
         user_id="non_existent_user_id",
         data=valid_update_data
       )
@@ -175,6 +178,7 @@ class TestUpdateUserUseCase:
     # Act & Assert
     with pytest.raises(Exception, match=error_regex) as exc_info:
       use_case.execute(
+        active_user=existing_user,
         user_id="user_id_123",
         data=update_data
       )
@@ -196,6 +200,7 @@ class TestUpdateUserUseCase:
     
     # Act
     result = use_case.execute(
+      active_user=existing_user,
       user_id="user_id_123",
       data=update_data
     )
@@ -236,6 +241,7 @@ class TestUpdateUserUseCase:
     # Act & Assert
     with pytest.raises(InvalidDataException) as exc_info:
       use_case.execute(
+        active_user=existing_user,
         user_id="user_id_123",
         data=update_data
       )
@@ -243,3 +249,41 @@ class TestUpdateUserUseCase:
     assert str(exc_info.value) == "The username 'existingusername' is already taken."
     uow.users.get_user_by_id.assert_called_once_with("user_id_123")
     uow.users.get_user_by_username.assert_called_once_with("existingusername")
+  
+  def test_execute_unauthorized(
+    self,
+    use_case,
+    existing_user,
+    uow,
+    valid_update_data
+  ):
+    # Arrange
+    uow.users.get_user_by_id.return_value = existing_user 
+    uow.users.get_user_by_username.return_value = None
+
+    # Act & Assert
+    with pytest.raises(UnauthorizedException) as exc_info:
+      use_case.execute(
+        active_user=None,
+        user_id="user_id_123",
+        data=valid_update_data
+      )
+    
+    assert str(exc_info.value) == "You must be authenticated to update a user."
+
+    # Act & Assert for non-matching active user
+    with pytest.raises(UnauthorizedException) as exc_info:
+      use_case.execute(
+        active_user=UserEntity(
+          id="different_user_id",
+          first_name="Jane",
+          last_name="Doe",
+          username="janedoe",
+          password="hashed_password",
+          avatar=None,
+          created_at=datetime(2024, 1, 2, 0, 0, 0, tzinfo=timezone.utc),
+          updated_at=datetime(2024, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
+        ),
+        user_id="user_id_123",
+        data=valid_update_data
+      )

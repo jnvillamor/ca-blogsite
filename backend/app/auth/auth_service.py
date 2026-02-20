@@ -4,6 +4,7 @@ from .token_service import TokenService
 from src.application.dto import BasicUserDTO, UserResponseDTO
 from src.application.repositories import IUserRepository
 from src.application.services import IPasswordHasher
+from src.domain.entities import UserEntity
 
 class AuthService:
   @staticmethod
@@ -37,13 +38,13 @@ class AuthService:
   def get_current_user(
     user_repo: IUserRepository,
     token: str,
-  ) -> UserResponseDTO:
+  ) -> UserEntity:
     token_data = TokenService.verify_token(token)
     user = user_repo.get_user_by_id(token_data.user_id)
     if not user:
       raise AuthException("User not found")
     
-    return UserResponseDTO.model_validate(user)
+    return user
   
   @staticmethod
   def refresh_access_token(

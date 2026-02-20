@@ -14,6 +14,7 @@ from app.dependencies import get_current_user
 from app.repositories import UserRepository
 from app.services import PasswordHasher
 from src.application.dto import UserResponseDTO
+from src.domain.entities import UserEntity
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -82,6 +83,6 @@ def login(
 )
 def get_authenticated_user(
   request: Request,
-  current_user: UserResponseDTO = Depends(get_current_user)
+  current_user: UserEntity = Depends(get_current_user)
 ):
-  return current_user
+  return UserResponseDTO.model_validate(current_user.to_dict()) 

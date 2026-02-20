@@ -1,6 +1,7 @@
 from src.application.services import IPasswordHasher, IUnitOfWork
 from src.application.dto import ChangePasswordDTO, UserResponseDTO
-from src.domain.exceptions import InvalidDataException, NotFoundException
+from src.domain.entities import UserEntity
+from src.domain.exceptions import InvalidDataException, NotFoundException, UnauthorizedException
 from src.domain.value_objects import Password
 
 class ChangePasswordUseCase:
@@ -12,12 +13,23 @@ class ChangePasswordUseCase:
     self.uow = unit_of_work
     self.password_hasher = password_hasher
 
-  def execute(self, user_id: str, data: ChangePasswordDTO) -> UserResponseDTO:
+  def execute(
+    self, 
+    active_user: UserEntity,
+    user_id: str, 
+    data: ChangePasswordDTO
+  ) -> UserResponseDTO:
+    if not active_user:
+      raise UnauthorizedException("You must be authenticated to change a password.")
+
     with self.uow:
       user = self.uow.users.get_user_by_id(user_id)
 
       if not user:
         raise NotFoundException("User", f"user_id: {user_id}")
+      
+      if active_user.id != user_id:
+        raise UnauthorizedException("You are not authorized to change the password for this user.")
       
       if data.confirm_new_password != data.new_password:
         raise InvalidDataException(f"New password and confirmation do not match.")

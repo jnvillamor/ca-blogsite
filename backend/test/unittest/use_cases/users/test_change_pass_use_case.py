@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from src.application.dto import ChangePasswordDTO, UserResponseDTO
 from src.application.use_cases.users import ChangePasswordUseCase
 from src.domain.entities import UserEntity
-from src.domain.exceptions import NotFoundException, InvalidDataException
+from src.domain.exceptions import NotFoundException, InvalidDataException, UnauthorizedException
 
 @pytest.fixture
 def create_existing_user():
@@ -59,7 +59,11 @@ class TestChangePasswordUseCase:
     )
 
     unit_of_work.users.update_user.side_effect = lambda user_id, user: user
-    result = use_case.execute(user_id="user1", data=payload)
+    result = use_case.execute(
+      active_user=user,
+      user_id="user1", 
+      data=payload
+    )
 
     # Assert
     unit_of_work.users.get_user_by_id.assert_called_once_with("user1")
@@ -77,9 +81,11 @@ class TestChangePasswordUseCase:
   def test_execute_user_not_found(
     self,
     use_case,
-    unit_of_work
+    create_existing_user,
+    unit_of_work,
   ):
     # Arrange
+    user = create_existing_user
     unit_of_work.users.get_user_by_id.return_value = None
     
     # Act & Assert
@@ -92,7 +98,11 @@ class TestChangePasswordUseCase:
     user_id = "non_existent_user"
 
     with pytest.raises(NotFoundException) as exc_info:
-      use_case.execute(user_id=user_id, data=payload)
+      use_case.execute(
+        active_user=user,
+        user_id=user_id, 
+        data=payload
+      )
     
     assert f"User with identifier 'user_id: {user_id}' was not found" in str(exc_info.value)
 
@@ -116,7 +126,7 @@ class TestChangePasswordUseCase:
     )
 
     with pytest.raises(InvalidDataException) as exc_info:
-      use_case.execute(user_id="user1", data=payload)
+      use_case.execute(active_user=user, user_id="user1", data=payload)
     
     assert "Old password is incorrect." in str(exc_info.value)
     password_hasher.verify.assert_called_once_with(payload.old_password, user.password)
@@ -139,7 +149,11 @@ class TestChangePasswordUseCase:
     )
 
     with pytest.raises(InvalidDataException) as exc_info:
-      use_case.execute(user_id="user1", data=payload)
+      use_case.execute(
+        active_user=user, 
+        user_id="user1", 
+        data=payload
+      )
     assert "New password and confirmation do not match." in str(exc_info.value)
   
   @pytest.mark.parametrize(
@@ -174,5 +188,68 @@ class TestChangePasswordUseCase:
       confirm_new_password=password
     )
     with pytest.raises(InvalidDataException, match=error_regex) as exc_info:
-      use_case.execute(user_id="user1", data=payload)
+      use_case.execute(
+        active_user=user, 
+        user_id="user1", 
+        data=payload
+      )
     password_hasher.verify.assert_called_once_with(payload.old_password, user.password)
+
+  def test_execute_unauthorized_user(
+    self,
+    use_case,
+    unit_of_work,
+    create_existing_user
+  ):
+    # Arrange
+    user = create_existing_user
+    unit_of_work.users.get_user_by_id.return_value = user
+    
+    # Act & Assert
+    payload = ChangePasswordDTO(
+      old_password="oldpass",
+      new_password="SecurePass.123",
+      confirm_new_password="SecurePass.123"
+    )
+
+    with pytest.raises(UnauthorizedException) as exc_info:
+      use_case.execute(
+        active_user=UserEntity(
+          id="other_user",
+          first_name="Jane",
+          last_name="Smith",
+          username="janesmith",
+          avatar=None,
+          password="otherpass",
+          created_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+          updated_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+        ),
+        user_id="user1", 
+        data=payload
+      )
+    assert "You are not authorized to change the password for this user." in str(exc_info.value)
+
+  def test_execute_unauthenticated_user(
+    self,
+    use_case,
+    unit_of_work,
+    create_existing_user
+  ):
+    # Arrange
+    user = create_existing_user
+    unit_of_work.users.get_user_by_id.return_value = user
+    
+    # Act & Assert
+    payload = ChangePasswordDTO(
+      old_password="oldpass",
+      new_password="SecurePass.123",
+      confirm_new_password="SecurePass.123"
+    )
+
+    with pytest.raises(UnauthorizedException) as exc_info:
+      use_case.execute(
+        active_user=None,
+        user_id="user1", 
+        data=payload
+      )
+    assert "You must be authenticated to change a password." in str(exc_info.value)

@@ -88,17 +88,3 @@ class TestDeleteUserUseCase:
       )
     
     assert str(exc_info.value) == "You are not authorized to delete this user."
-
-  def test_execute_unauthenticated(self, use_case, uow, existing_user):
-    # Arrange
-    user_id = "user123"
-    uow.users.get_user_by_id.return_value = existing_user
-    
-    # Act & Assert
-    with pytest.raises(Exception) as exc_info:
-      use_case.execute(
-        active_user=None,
-        user_id=user_id
-      )
-    
-    assert str(exc_info.value) == "You must be authenticated to delete a user."

@@ -28,6 +28,7 @@ class TestUpdateUserUseCase:
     )
     
     updated_user = update_user_use_case.execute(
+      active_user=test_user,
       user_id = test_user.id,
       data=update_dto
     )
@@ -36,15 +37,22 @@ class TestUpdateUserUseCase:
     assert updated_user.last_name == "Name"
     assert updated_user.username == "updatedusername"
   
-  def test_update_user_non_existing(self, update_user_use_case):
+  def test_update_user_non_existing(
+      self, 
+      update_user_use_case: UpdateUserUseCase,
+      create_test_user: Callable[..., UserEntity]
+    ):
     update_dto = UpdateUserDTO(
       first_name="Non",
       last_name="Existent",
       username="nonexistentuser"
     )
+
+    test_user = create_test_user()
     
     with pytest.raises(Exception) as exc_info:
       update_user_use_case.execute(
+        active_user=test_user,
         user_id = "non-existing-id",
         data=update_dto
       )
@@ -80,6 +88,7 @@ class TestUpdateUserUseCase:
     
     with pytest.raises(Exception, match=error_regex) as exc_info:
       update_user_use_case.execute(
+        active_user=test_user,
         user_id = test_user.id,
         data=update_data
       )
@@ -104,8 +113,35 @@ class TestUpdateUserUseCase:
     
     with pytest.raises(Exception) as exc_info:
       update_user_use_case.execute(
+        active_user=user2,
         user_id = user2.id,
         data=update_dto
       )
     
     assert "The username 'uniqueusername1' is already taken." in str(exc_info.value)
+  
+  def test_update_user_unauthorized(
+    self,
+    update_user_use_case: UpdateUserUseCase,
+    create_test_user: Callable[..., UserEntity]
+  ):
+    existing_user: UserEntity = create_test_user()
+    other_user = create_test_user(
+      id="other_user_id",
+      username="otheruser"
+    )
+    valid_update_data = UpdateUserDTO(
+      first_name="Valid",
+      last_name="Update",
+      username="validupdateusername"
+    )
+    
+     # Act & Assert for unauthorized user
+    with pytest.raises(Exception) as exc_info:
+      update_user_use_case.execute(
+        active_user=other_user,
+        user_id=existing_user.id,
+        data=valid_update_data
+      )
+    
+    assert str(exc_info.value) == "You are not authorized to update this user."

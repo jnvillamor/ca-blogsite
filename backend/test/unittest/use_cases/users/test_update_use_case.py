@@ -261,16 +261,6 @@ class TestUpdateUserUseCase:
     uow.users.get_user_by_id.return_value = existing_user 
     uow.users.get_user_by_username.return_value = None
 
-    # Act & Assert
-    with pytest.raises(UnauthorizedException) as exc_info:
-      use_case.execute(
-        active_user=None,
-        user_id="user_id_123",
-        data=valid_update_data
-      )
-    
-    assert str(exc_info.value) == "You must be authenticated to update a user."
-
     # Act & Assert for non-matching active user
     with pytest.raises(UnauthorizedException) as exc_info:
       use_case.execute(

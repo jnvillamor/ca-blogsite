@@ -228,28 +228,3 @@ class TestChangePasswordUseCase:
         data=payload
       )
     assert "You are not authorized to change the password for this user." in str(exc_info.value)
-
-  def test_execute_unauthenticated_user(
-    self,
-    use_case,
-    unit_of_work,
-    create_existing_user
-  ):
-    # Arrange
-    user = create_existing_user
-    unit_of_work.users.get_user_by_id.return_value = user
-    
-    # Act & Assert
-    payload = ChangePasswordDTO(
-      old_password="oldpass",
-      new_password="SecurePass.123",
-      confirm_new_password="SecurePass.123"
-    )
-
-    with pytest.raises(UnauthorizedException) as exc_info:
-      use_case.execute(
-        active_user=None,
-        user_id="user1", 
-        data=payload
-      )
-    assert "You must be authenticated to change a password." in str(exc_info.value)

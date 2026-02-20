@@ -1,2 +1,2 @@
-from .common import InvalidDataException, NotFoundException
+from .common import InvalidDataException, NotFoundException, UnauthorizedException
 from .user_exceptions import UsernameExistsException

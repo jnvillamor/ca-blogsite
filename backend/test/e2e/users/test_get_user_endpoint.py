@@ -20,7 +20,7 @@ class TestGetUserEndpoint:
     skip: int,
     expected_count: int
   ):
-    response = client.get(f"/users/?limit={limit}&skip={skip}")
+    response = client.get(f"v1/users/?limit={limit}&skip={skip}")
 
     assert response.status_code == 200
     data = response.json()
@@ -45,7 +45,7 @@ class TestGetUserEndpoint:
     client: TestClient,
     user_id: str
   ):
-    response = client.get(f"/users/{user_id}")
+    response = client.get(f"v1/users/{user_id}")
 
     assert response.status_code == 200
     data = response.json()
@@ -70,7 +70,7 @@ class TestGetUserEndpoint:
     client: TestClient
   ):
     non_existent_user_id = "nonexistentuser"
-    response = client.get(f"/users/{non_existent_user_id}")
+    response = client.get(f"v1/users/{non_existent_user_id}")
 
     assert response.status_code == 404
     data = response.json()
@@ -91,7 +91,7 @@ class TestGetUserEndpoint:
     client: TestClient,
     username: str
   ):
-    response = client.get(f"/users/by-username/{username}")
+    response = client.get(f"v1/users/by-username/{username}")
 
     assert response.status_code == 200
     data = response.json()
@@ -108,7 +108,7 @@ class TestGetUserEndpoint:
     client: TestClient
   ):
     non_existent_username = "nonexistentusername"
-    response = client.get(f"/users/by-username/{non_existent_username}")
+    response = client.get(f"v1/users/by-username/{non_existent_username}")
 
     assert response.status_code == 404
     data = response.json()

@@ -10,7 +10,7 @@ class TestUpdateUserEndpoint:
       "username": "aryastark",
     }
 
-    response = client.put("/users/user1", json=payload)
+    response = client.put("v1/users/user1", json=payload)
     assert response.status_code == 200
     data = response.json()
     for key in payload:
@@ -42,7 +42,7 @@ class TestUpdateUserEndpoint:
   ):
     payloag = { field: invalid_value }
 
-    response = client.put("/users/user1", json=payloag)
+    response = client.put("v1/users/user1", json=payloag)
     assert response.status_code == 400
     data = response.json()
     assert "detail" in data
@@ -55,7 +55,7 @@ class TestUpdateUserEndpoint:
       "username": "nonexistentuser",
     }
 
-    response = client.put("/users/nonexistent", json=payload)
+    response = client.put("v1/users/nonexistent", json=payload)
     assert response.status_code == 404
     data = response.json()
     assert data["detail"] == "User with identifier 'user_id: nonexistent' was not found."
@@ -71,7 +71,7 @@ class TestUpdateUserEndpoint:
       "username": "bobjohnson",  # username already taken by another user
     }
 
-    response = client.put("/users/user1", json=payload)
+    response = client.put("v1/users/user1", json=payload)
     assert response.status_code == 400
     data = response.json()
     assert data["detail"] == "The username 'bobjohnson' is already taken."

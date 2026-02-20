@@ -10,7 +10,7 @@ class TestCreateUserEndpoint:
       "username": "johndoe",
       "password": "SecurePass.123"
     }
-    response = client.post("/users/register", json=payload)
+    response = client.post("v1/users/register", json=payload)
 
     assert response.status_code == 201
     data = response.json()
@@ -29,11 +29,11 @@ class TestCreateUserEndpoint:
       "password": "AnotherPass.456"
     }
     # First creation should succeed
-    response1 = client.post("/users/register", json=payload)
+    response1 = client.post("v1/users/register", json=payload)
     assert response1.status_code == 201
 
     # Second creation with same username should fail
-    response2 = client.post("/users/register", json=payload)
+    response2 = client.post("v1/users/register", json=payload)
     assert response2.status_code == 409
     data = response2.json()
     assert data["detail"] == f"The username '{payload['username']}' is already taken."
@@ -69,7 +69,7 @@ class TestCreateUserEndpoint:
     }
     payload[field] = invalid_value
 
-    response = client.post("/users/register", json=payload)
+    response = client.post("v1/users/register", json=payload)
     assert response.status_code == 400
     data = response.json()
 
@@ -101,7 +101,7 @@ class TestCreateUserEndpoint:
       "password": password
     }
 
-    response = client.post("/users/register", json=payload)
+    response = client.post("v1/users/register", json=payload)
     assert response.status_code == 400
     data = response.json()
 

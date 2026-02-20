@@ -15,7 +15,7 @@ class TestChangePassEndpoint:
       "confirm_new_password": "NewPass.456"
     }
 
-    response = client.put(f"/users/change-password/{user_id}", json=payload)
+    response = client.put(f"v1/users/change-password/{user_id}", json=payload)
 
     assert response.status_code == 200
     data = response.json()
@@ -33,7 +33,7 @@ class TestChangePassEndpoint:
       "confirm_new_password": "NewPass.456"
     }
 
-    response = client.put(f"/users/change-password/{user_id}", json=payload)
+    response = client.put(f"v1/users/change-password/{user_id}", json=payload)
 
     assert response.status_code == 404
     data = response.json()
@@ -51,7 +51,7 @@ class TestChangePassEndpoint:
       "confirm_new_password": "NewPass.456"
     }
 
-    response = client.put(f"/users/change-password/{user_id}", json=payload)
+    response = client.put(f"v1/users/change-password/{user_id}", json=payload)
 
     assert response.status_code == 400
     data = response.json()
@@ -68,7 +68,7 @@ class TestChangePassEndpoint:
       "new_password": "NewPass.456",
       "confirm_new_password": "DifferentPass.789"
     }
-    response = client.put(f"/users/change-password/{user_id}", json=payload)
+    response = client.put(f"v1/users/change-password/{user_id}", json=payload)
     assert response.status_code == 400
     data = response.json()
     assert data["detail"] == "New password and confirmation do not match."
@@ -98,7 +98,7 @@ class TestChangePassEndpoint:
       "confirm_new_password": password
     }
 
-    response = client.put(f"/users/change-password/{user_id}", json=payload)
+    response = client.put(f"v1/users/change-password/{user_id}", json=payload)
 
     assert response.status_code == 400
     data = response.json()

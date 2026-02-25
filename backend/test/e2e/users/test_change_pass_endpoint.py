@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 class TestChangePassEndpoint:
   def test_change_pass_success(
     self,
-    client: TestClient,
+    authenticated_client: TestClient,
     create_existing_users
   ):
     user_id = "user1"
@@ -15,7 +15,7 @@ class TestChangePassEndpoint:
       "confirm_new_password": "NewPass.456"
     }
 
-    response = client.put(f"v1/users/change-password/{user_id}", json=payload)
+    response = authenticated_client.put(f"v1/users/change-password/{user_id}", json=payload)
 
     assert response.status_code == 200
     data = response.json()
@@ -24,7 +24,7 @@ class TestChangePassEndpoint:
   
   def test_change_pass_non_existent_user(
     self,
-    client: TestClient
+    authenticated_client: TestClient
   ):
     user_id = "non_existent_user"
     payload = {
@@ -33,7 +33,7 @@ class TestChangePassEndpoint:
       "confirm_new_password": "NewPass.456"
     }
 
-    response = client.put(f"v1/users/change-password/{user_id}", json=payload)
+    response = authenticated_client.put(f"v1/users/change-password/{user_id}", json=payload)
 
     assert response.status_code == 404
     data = response.json()
@@ -41,7 +41,7 @@ class TestChangePassEndpoint:
 
   def test_change_pass_incorrect_old_password(
     self,
-    client: TestClient,
+    authenticated_client: TestClient,
     create_existing_users
   ):
     user_id = "user1"
@@ -51,7 +51,7 @@ class TestChangePassEndpoint:
       "confirm_new_password": "NewPass.456"
     }
 
-    response = client.put(f"v1/users/change-password/{user_id}", json=payload)
+    response = authenticated_client.put(f"v1/users/change-password/{user_id}", json=payload)
 
     assert response.status_code == 400
     data = response.json()
@@ -59,7 +59,7 @@ class TestChangePassEndpoint:
   
   def test_change_pass_mismatched_new_passwords(
     self,
-    client: TestClient,
+    authenticated_client: TestClient,
     create_existing_users
   ):
     user_id = "user1"
@@ -68,7 +68,7 @@ class TestChangePassEndpoint:
       "new_password": "NewPass.456",
       "confirm_new_password": "DifferentPass.789"
     }
-    response = client.put(f"v1/users/change-password/{user_id}", json=payload)
+    response = authenticated_client.put(f"v1/users/change-password/{user_id}", json=payload)
     assert response.status_code == 400
     data = response.json()
     assert data["detail"] == "New password and confirmation do not match."
@@ -86,7 +86,7 @@ class TestChangePassEndpoint:
   )
   def test_change_pass_invalid_new_password(
     self,
-    client: TestClient,
+    authenticated_client: TestClient,
     create_existing_users,
     password,
     error_regex
@@ -98,8 +98,42 @@ class TestChangePassEndpoint:
       "confirm_new_password": password
     }
 
-    response = client.put(f"v1/users/change-password/{user_id}", json=payload)
+    response = authenticated_client.put(f"v1/users/change-password/{user_id}", json=payload)
 
     assert response.status_code == 400
     data = response.json()
     assert re.search(error_regex, data["detail"])
+  
+  def test_change_pass_unauthorized(self, authenticated_client: TestClient):
+    user_id = "user2"  # user2 is not the authenticated user
+    payload = {
+      "old_password": "SecurePass.123",
+      "new_password": "NewPass.456",
+      "confirm_new_password": "NewPass.456"
+    }
+
+    response = authenticated_client.put(f"v1/users/change-password/{user_id}", json=payload)
+    assert response.status_code == 401
+    data = response.json()
+    assert data["detail"] == "You are not authorized to change the password for this user."
+
+  def test_change_pass_missing_fields(self, authenticated_client: TestClient):
+    user_id = "user1"
+    payload = {
+      "old_password": "SecurePass.123",
+      # "new_password" is missing
+      "confirm_new_password": "NewPass.456"
+    }
+
+    response = authenticated_client.put(f"v1/users/change-password/{user_id}", json=payload)
+    assert response.status_code == 422
+
+    data = response.json()
+
+    assert data["message"] == "Invalid request data"
+    assert "details" in data
+
+    assert any(
+      error["loc"][-1] == "new_password" and error["type"] == "missing"
+      for error in data["details"]
+    ), "Expected validation error for missing 'new_password' field"

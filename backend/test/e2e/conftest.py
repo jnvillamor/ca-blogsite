@@ -87,3 +87,15 @@ def create_existing_users(db_session: Session, existing_users):
     db_session.add(user)
 
   db_session.commit()
+
+@pytest.fixture
+def authenticated_client(client: TestClient, create_existing_users):
+  login_data = {
+    "username": "alicesmith",
+    "password": "SecurePass.123"
+  }
+  response = client.post("/v1/auth/login", data=login_data)
+  assert response.status_code == 200, f"Login failed: {response.text}"
+  access_token = response.json().get("access_token")
+  client.headers.update({"Authorization": f"Bearer {access_token}"})
+  return client

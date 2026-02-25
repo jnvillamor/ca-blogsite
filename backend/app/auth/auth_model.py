@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from src.application.dto import BasicUserDTO
 
 class TokenType(Enum):
-  ACESS = "access"
+  ACCESS = "access"
   REFRESH = "refresh"
 
 class TokenData(BaseModel):

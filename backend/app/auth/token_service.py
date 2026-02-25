@@ -15,6 +15,7 @@ class TokenService:
     token_type: TokenType,
     expires_delta: Optional[timedelta] = None,
   ) -> Token:
+    logger.info(f"Creating {token_type} token for user_id: {data.user_id}")
     to_encode = data.__dict__.copy()
     if expires_delta:
       expire = datetime.now(timezone.utc) + expires_delta
@@ -25,15 +26,19 @@ class TokenService:
     
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, config.SECRET_KEY, algorithm=config.ALGORITHM)
+    logger.info(f"{token_type} token created successfully for user_id: {data.user_id}, expires at: {expire.isoformat()}")
     return Token(token=encoded_jwt, ttl=int((expire - datetime.now(timezone.utc)).total_seconds()))
 
   @staticmethod
   def verify_token(token: str ) -> TokenData:
     try:
+      logger.info(f"Verifying token: {token}")
       payload = jwt.decode(token, config.SECRET_KEY, algorithms=[config.ALGORITHM])
       user_id = payload.get("user_id")
       if user_id is None:
+        logger.error("Token payload does not contain user_id")
         raise jwt.InvalidTokenError("Token payload does not contain user_id")
+      logger.info(f"Token verified successfully for user_id: {user_id}")
       return TokenData(user_id=user_id)
     except jwt.PyJWTError as e:
       logger.error(f"Token verification failed: {str(e)}")

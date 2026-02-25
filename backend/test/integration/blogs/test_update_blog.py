@@ -33,6 +33,7 @@ class TestUpdateBlogUseCase:
     )
 
     updated_blog = update_blog_use_case.execute(
+      current_user=test_user,
       blog_id=blog_id,
       blog_data=update_dto
     )
@@ -41,7 +42,11 @@ class TestUpdateBlogUseCase:
     assert updated_blog.content == "This is the updated content of the test blog."
     assert updated_blog.hero_image == "https://example.com/updated-hero-image.png"
     
-  def test_update_blog_non_existing(self, update_blog_use_case):
+  def test_update_blog_non_existing(
+    self, 
+    update_blog_use_case: UpdateBlogUseCase, 
+    create_test_user: Callable[..., UserModel]
+  ):
     update_dto = UpdateBlogDTO(
       title="Non-Existent Blog",
       content="This blog does not exist.",
@@ -50,6 +55,7 @@ class TestUpdateBlogUseCase:
 
     with pytest.raises(NotFoundException) as exc_info:
       update_blog_use_case.execute(
+        current_user=create_test_user(),
         blog_id="non-existing-id",
         blog_data=update_dto
       )
@@ -89,6 +95,33 @@ class TestUpdateBlogUseCase:
 
     with pytest.raises(Exception, match=error_regex):
       update_blog_use_case.execute(
+        current_user=test_user,
+        blog_id=blog_id,
+        blog_data=update_dto
+      )
+  
+  def test_update_blog_unauthorized(
+    self,
+    update_blog_use_case: UpdateBlogUseCase,
+    create_test_user: Callable[..., UserModel],
+    create_test_blog: Callable[..., BlogModel]
+  ):
+    test_user = create_test_user()
+    author_id = test_user.id
+    test_blog = create_test_blog(author_id=author_id)
+    blog_id = test_blog.id
+
+    unauthorized_user = create_test_user(username="unauthorizeduser", id="unauthorized-user-id")
+
+    update_dto = UpdateBlogDTO(
+      title="Updated Title",
+      content="Updated content.",
+      hero_image="https://example.com/updated-hero-image.png"
+    )
+
+    with pytest.raises(Exception, match=r"You are not authorized to update this blog."):
+      update_blog_use_case.execute(
+        current_user=unauthorized_user,
         blog_id=blog_id,
         blog_data=update_dto
       )

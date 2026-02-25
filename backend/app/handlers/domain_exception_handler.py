@@ -2,9 +2,10 @@ import logging
 from fastapi import status, FastAPI, Request
 from fastapi.responses import JSONResponse
 from src.domain.exceptions import (
+  UnauthorizedException,
   InvalidDataException,
   UsernameExistsException,
-  NotFoundException
+  NotFoundException,
 )
 
 default_logger = logging.getLogger("uvicorn.error")
@@ -31,5 +32,13 @@ def register_domain_exception_handler(app: FastAPI, logger: logging.Logger = def
     logger.error(f"NotFoundException: {str(exc)}")
     return JSONResponse(
       status_code=status.HTTP_404_NOT_FOUND,
+      content={"detail": str(exc)}
+    )
+  
+  @app.exception_handler(UnauthorizedException)
+  def handle_unauthorized_exception(request: Request, exc: UnauthorizedException):
+    logger.error(f"UnauthorizedException: {str(exc)}")
+    return JSONResponse(
+      status_code=status.HTTP_401_UNAUTHORIZED,
       content={"detail": str(exc)}
     )

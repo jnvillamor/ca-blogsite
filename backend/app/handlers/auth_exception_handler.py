@@ -3,8 +3,6 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from jwt import PyJWTError, ExpiredSignatureError, InvalidTokenError, DecodeError
 
-from app.auth.auth_exceptions import AuthException
-
 default_logger = logging.getLogger("uvicorn.error")
 
 def register_auth_exception_handler(
@@ -53,15 +51,4 @@ def register_auth_exception_handler(
     return JSONResponse(
       status_code=status.HTTP_401_UNAUTHORIZED,
       content={"detail": "Token verification failed"}
-    )
-  
-  @app.exception_handler(AuthException)
-  def handle_auth_exception(
-    request: Request,
-    exc: AuthException
-  ):
-    logger.error(f"AuthException: {str(exc)}")
-    return JSONResponse(
-      status_code=status.HTTP_401_UNAUTHORIZED,
-      content={"detail": str(exc)}
     )

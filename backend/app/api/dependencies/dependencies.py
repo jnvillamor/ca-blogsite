@@ -3,8 +3,8 @@ from fastapi.security import OAuth2PasswordBearer
 from app.auth import AuthService
 from app.database.db import get_db
 from app.repositories import UserRepository
-from src.application.dto import UserResponseDTO
 from src.application.repositories import IUserRepository
+from src.domain.entities import UserEntity
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/v1/auth/login")
 
@@ -16,7 +16,5 @@ def get_user_repository(
 def get_current_user(
   user_repo: IUserRepository = Depends(get_user_repository),
   token: str = Depends(oauth2_scheme),
-) -> UserResponseDTO:
-  print("Getting current user with token:", token)
-  print(type(token))
+) -> UserEntity:
   return AuthService.get_current_user(user_repo, token)

@@ -3,6 +3,7 @@ from fastapi import APIRouter, Request, Depends, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
+from app.api.dependencies import get_current_user
 from app.database.db import get_db
 from app.database.unit_of_work import get_uow
 from app.repositories import UserRepository
@@ -22,6 +23,7 @@ from src.application.use_cases.users import (
   ChangePasswordUseCase,
   DeleteUserUseCase
 )
+from src.domain.entities import UserEntity
 
 logger = logging.getLogger(__name__)
 
@@ -174,12 +176,17 @@ def update_user(
   request: Request,
   user_id: str,
   user_data: UpdateUserDTO,
-  session: Session = Depends(get_db)
+  session: Session = Depends(get_db),
+  active_user: UserEntity = Depends(get_current_user)
 ):
   logger.info(f"Updating user with ID: {user_id}")
   unit_of_work = get_uow(session)
   use_case = UpdateUserUseCase(unit_of_work)
-  result = use_case.execute(user_id, user_data)
+  result = use_case.execute(
+    active_user=active_user, 
+    user_id=user_id, 
+    data=user_data
+  )
   logger.info(f"User updated: {result.username}")
   return result
 
@@ -203,7 +210,8 @@ def change_user_password(
   request: Request,
   user_id: str,
   pass_data: ChangePasswordDTO,
-  session: Session = Depends(get_db)
+  session: Session = Depends(get_db),
+  active_user: UserEntity = Depends(get_current_user)
 ):
   logger.info(f"Changing password for user with ID: {user_id}")
   password_hasher = PasswordHasher()
@@ -212,7 +220,11 @@ def change_user_password(
     unit_of_work=unit_of_work,
     password_hasher=password_hasher
   )
-  result = use_case.execute(user_id, pass_data)
+  result = use_case.execute(
+    active_user=active_user, 
+    user_id=user_id, 
+    data=pass_data
+  )
   logger.info(f"Password changed for user ID: {user_id}")
   return result
 
@@ -232,10 +244,14 @@ def change_user_password(
 def delete_user(
   request: Request,
   user_id: str,
-  session: Session = Depends(get_db)
+  session: Session = Depends(get_db),
+  active_user: UserEntity = Depends(get_current_user)
 ):
   logger.info(f"Deleting user with ID: {user_id}")
   unit_of_work = get_uow(session)
   use_case = DeleteUserUseCase(unit_of_work)
-  use_case.execute(user_id)
+  use_case.execute(
+    active_user=active_user, 
+    user_id=user_id
+  )
   logger.info(f"User deleted with ID: {user_id}")

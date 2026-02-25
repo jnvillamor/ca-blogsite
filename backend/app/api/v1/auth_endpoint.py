@@ -8,9 +8,9 @@ from fastapi import (
 )
 from fastapi.security import OAuth2PasswordRequestForm
 
+from app.api.dependencies import get_current_user
 from app.auth import AuthService, AuthResponse
 from app.database.db import get_db
-from app.dependencies import get_current_user
 from app.repositories import UserRepository
 from app.services import PasswordHasher
 from src.application.dto import UserResponseDTO

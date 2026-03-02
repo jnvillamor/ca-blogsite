@@ -56,15 +56,18 @@ class AuthService:
     user_repo: IUserRepository,
     token: str,
   ) -> AuthResponse:
+    logger.info(f"Refreshing access token.")
     token_data = TokenService.verify_token(token)
     user = user_repo.get_user_by_id(token_data.user_id)
     if not user:
+      logger.warning(f"Token refresh failed: User not found for user_id: {token_data.user_id}")
       raise UnauthorizedException("User not found")
     logger.info(f"Refreshing access token for user_id: {user.id}")
     new_token_data = TokenData(user_id=user.id)
     new_access_token = TokenService.create_token(new_token_data, TokenType.ACCESS)
     new_refresh_token = TokenService.create_token(new_token_data, TokenType.REFRESH)
 
+    logger.info(f"Access token refreshed successfully for user_id: {user.id}")
     return AuthResponse(
       access_token=new_access_token.token,
       access_token_ttl=new_access_token.ttl,

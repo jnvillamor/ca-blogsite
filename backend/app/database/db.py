@@ -32,7 +32,6 @@ def get_db() -> Generator[Session, None, None]:
     logger.info("Database session created.")   
     yield db
   except Exception:
-    logger.error("An error occurred with the database session.", exc_info=True)
     raise
   finally:
     logger.info("Closing database session.")

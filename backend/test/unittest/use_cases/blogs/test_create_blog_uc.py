@@ -82,10 +82,10 @@ class TestCreateBlogUseCase:
   ):
     unit_of_work.users.get_user_by_id.return_value = None
 
-    with pytest.raises(NotFoundException) as exc_info:
+    with pytest.raises(InvalidDataException) as exc_info:
       create_blog_use_case.execute(blog_data)
 
-    assert str(exc_info.value) == f"User with identifier 'user_id: {blog_data.author_id}' was not found."
+    assert str(exc_info.value) == "Author not found."
     unit_of_work.users.get_user_by_id.assert_called_once_with(blog_data.author_id)
   
   @pytest.mark.parametrize(

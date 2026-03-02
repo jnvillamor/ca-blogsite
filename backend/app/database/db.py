@@ -1,8 +1,10 @@
-# app/database/db.py
+import logging
 from app.config import config
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 from typing import Generator
+
+logger = logging.getLogger(__name__)
 
 # Base for models
 Base = declarative_base()
@@ -24,14 +26,14 @@ SessionLocal = sessionmaker(
 def get_db() -> Generator[Session, None, None]:
   """
   Yield a sync SQLAlchemy session for endpoints or CLI usage.
-  Ensures commit/rollback are handled automatically.
   """
   db = SessionLocal()
   try:
+    logger.info("Database session created.")   
     yield db
-    db.commit()
   except Exception:
-    db.rollback()
+    logger.error("An error occurred with the database session.", exc_info=True)
     raise
   finally:
+    logger.info("Closing database session.")
     db.close()

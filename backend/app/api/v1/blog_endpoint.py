@@ -3,6 +3,7 @@ from fastapi import APIRouter, Request, Depends, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
+from ..dependencies import get_current_user 
 from app.database.db import get_db
 from app.database.unit_of_work import get_uow
 from app.repositories import BlogRepository
@@ -20,6 +21,7 @@ from src.application.use_cases.blogs import (
   UpdateBlogUseCase,
   DeleteBlogUseCase
 )
+from src.domain.entities import UserEntity
 
 logger = logging.getLogger(__name__)
 
@@ -159,12 +161,17 @@ def update_blog(
   request: Request,
   blog_id: str,
   blog_data: UpdateBlogDTO,
-  session: Session = Depends(get_db)
+  session: Session = Depends(get_db),
+  current_user: UserEntity = Depends(get_current_user)
 ):
   logger.info(f"Updating blog with id: {blog_id}")
   unit_of_work = get_uow(session)
   use_case = UpdateBlogUseCase(unit_of_work)
-  updated_blog = use_case.execute(blog_id, blog_data)
+  updated_blog = use_case.execute(
+    current_user,
+    blog_id,
+    blog_data
+  )
   logger.info(f"Blog updated: {updated_blog.title} (id: {updated_blog.id})")
   return updated_blog
 
@@ -184,11 +191,12 @@ def update_blog(
 def delete_blog(
   request: Request,
   blog_id: str,
-  session: Session = Depends(get_db)
+  session: Session = Depends(get_db),
+  current_user: UserEntity = Depends(get_current_user)
 ):
   logger.info(f"Deleting blog with id: {blog_id}")
   unit_of_work = get_uow(session)
   use_case = DeleteBlogUseCase(unit_of_work)
-  use_case.execute(blog_id)
+  use_case.execute(current_user, blog_id)
   logger.info(f"Blog with id: {blog_id} deleted successfully.")
   return JSONResponse(status_code=status.HTTP_204_NO_CONTENT, content=f"Blog with id '{blog_id}' deleted successfully.")

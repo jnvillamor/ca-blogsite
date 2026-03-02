@@ -1,7 +1,7 @@
 from src.application.services import IUnitOfWork, IIdGenerator
 from src.application.dto import CreateBlogDTO, BlogResponseDTO
 from src.domain.entities import BlogEntity
-from src.domain.exceptions import NotFoundException
+from src.domain.exceptions import InvalidDataException 
 
 class CreateBlogUseCase:
   def __init__(
@@ -20,7 +20,7 @@ class CreateBlogUseCase:
       user = self.uow.users.get_user_by_id(blog_data.author_id)
 
       if not user:
-        raise NotFoundException("User", f"user_id: {blog_data.author_id}")
+        raise InvalidDataException("Author not found.")
       
       blog_id = self.id_generator.generate()
 

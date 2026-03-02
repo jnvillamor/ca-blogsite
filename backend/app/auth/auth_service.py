@@ -43,7 +43,7 @@ class AuthService:
     user_repo: IUserRepository,
     token: str,
   ) -> UserEntity:
-    logger.info(f"Getting current user from token: {token}")
+    logger.info(f"Getting current user from token.")
     token_data = TokenService.verify_token(token)
     user = user_repo.get_user_by_id(token_data.user_id)
     if not user:

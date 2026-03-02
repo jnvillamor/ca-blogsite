@@ -32,7 +32,7 @@ class TokenService:
   @staticmethod
   def verify_token(token: str ) -> TokenData:
     try:
-      logger.info(f"Verifying token: {token}")
+      logger.info(f"Verifying token...")
       payload = jwt.decode(token, config.SECRET_KEY, algorithms=[config.ALGORITHM])
       user_id = payload.get("user_id")
       if user_id is None:

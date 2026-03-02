@@ -5,7 +5,7 @@ from app.database.unit_of_work import UnitOfWork
 from app.services import UuidGenerator
 from src.application.dto import CreateBlogDTO
 from src.application.use_cases.blogs import CreateBlogUseCase
-from src.domain.exceptions import NotFoundException
+from src.domain.exceptions import InvalidDataException 
 
 @pytest.fixture
 def create_blog_use_case(db_session: Session) -> CreateBlogUseCase:
@@ -56,8 +56,8 @@ class TestCreateBlogUseCase:
     with pytest.raises(Exception) as exc_info:
       create_blog_use_case.execute(blog_data)
     
-    assert isinstance(exc_info.value, NotFoundException)
-    assert "User with identifier 'user_id: non-existent-author-id' was not found." in str(exc_info.value)
+    assert isinstance(exc_info.value, InvalidDataException)
+    assert "Author not found." in str(exc_info.value)
 
   @pytest.mark.parametrize(
     "title, error_regex",

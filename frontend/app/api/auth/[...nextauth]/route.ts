@@ -1,5 +1,5 @@
 import { config } from "@/app/config/config";
-import { login, refreshToken } from "@/app/data-access/auth/auth";
+import { login, logout, refreshToken } from "@/app/data-access/auth/auth";
 import { jwtDecode } from "jwt-decode";
 import NextAuth, { AuthOptions } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
@@ -13,7 +13,7 @@ const getTokenExp = (token: string): number => {
   return decoded.exp * 1000; // Convert to milliseconds
 }
 
-export const OPTIONS: AuthOptions = {
+export const authOptions: AuthOptions = {
   providers: [
     Credentials({
       name: "Credentials",
@@ -111,9 +111,16 @@ export const OPTIONS: AuthOptions = {
 
       return session;
     }
+  },
+  events: {
+    async signOut({ token }) {
+      if (!token?.access_token) return;
+
+      await logout(token.access_token);
+    }
   }
 };
 
-const handler = NextAuth(OPTIONS);
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };

@@ -58,3 +58,24 @@ export const refreshToken = async (refreshToken: string): Promise<AuthResponse> 
   const data = await response.json();
   return data as AuthResponse;
 }
+
+export const logout = async (accessToken: string): Promise<void> => {
+  const response = await fetch(
+    `${config.apiEndpoint}/${config.apiVersion}/auth/logout/`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${accessToken}`,
+      },
+    },
+  )
+
+  if (!response.ok) {
+    console.error("Logout failed with status:", response.status);
+    const data = await response.json();
+    throw new AuthException(data.detail || "Logout failed");
+  }
+
+  console.log("Logout successful, response status:", response.status);
+}

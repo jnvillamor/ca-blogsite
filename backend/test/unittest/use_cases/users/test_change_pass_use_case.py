@@ -73,7 +73,7 @@ class TestChangePasswordUseCase:
     assert isinstance(result, UserResponseDTO)
 
     for field in user.to_dict():
-      if field != "password":
+      if field not in ["password", "access_token_id", "refresh_token_id"]:
         assert getattr(result, field) == getattr(user, field)
     
     assert user.password == "hashed_new_password"

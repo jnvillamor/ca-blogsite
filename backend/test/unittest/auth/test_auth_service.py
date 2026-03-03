@@ -10,6 +10,12 @@ def password_hasher(mocker):
   return hasher
 
 @pytest.fixture
+def id_generator(mocker):
+  generator = mocker.Mock()
+  generator.generate.side_effect = lambda: f"token-{datetime.now().timestamp()}"
+  return generator
+
+@pytest.fixture
 def user_repo(mocker):
   repo = mocker.Mock()
   return repo
@@ -27,7 +33,8 @@ def existing_user():
     username="johndoe",
     password="hashedpassword",
     avatar=None,
-    # set created_at to a fixed datetime for consistent testing
+    access_token_id=None,
+    refresh_token_id=None,
     created_at=datetime(2023, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
     updated_at=datetime(2023, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
   )
@@ -38,12 +45,16 @@ class TestAuthService:
     auth_service,
     user_repo,
     password_hasher,
-    existing_user
+    existing_user,
+    db_session,
+    id_generator
   ):
     user_repo.get_user_by_username.return_value = existing_user
     password_hasher.verify.return_value = True
 
     result = auth_service.authenticate_user(
+      session=db_session,
+      id_generator=id_generator,
       user_repo=user_repo,
       password_hasher=password_hasher,
       username=existing_user.username,
@@ -58,12 +69,16 @@ class TestAuthService:
     self,
     auth_service,
     user_repo,
-    password_hasher
+    password_hasher,
+    db_session,
+    id_generator
   ):
     user_repo.get_user_by_username.return_value = None
 
     with pytest.raises(Exception):
       auth_service.authenticate_user(
+        session=db_session,
+        id_generator=id_generator,  
         user_repo=user_repo,
         password_hasher=password_hasher,
         username="nonexistent",
@@ -75,13 +90,17 @@ class TestAuthService:
     auth_service,
     user_repo,
     password_hasher,
-    existing_user
+    existing_user,
+    db_session,
+    id_generator
   ):
     user_repo.get_user_by_username.return_value = existing_user
     password_hasher.verify.return_value = False
 
     with pytest.raises(Exception):
       auth_service.authenticate_user(
+        session=db_session,
+        id_generator=id_generator,
         user_repo=user_repo,
         password_hasher=password_hasher,
         username=existing_user.username,
@@ -93,13 +112,17 @@ class TestAuthService:
     auth_service,
     password_hasher,
     user_repo,
-    existing_user
+    existing_user,
+    db_session,
+    id_generator
   ):
     # login to get a valid token
     user_repo.get_user_by_username.return_value = existing_user
     password_hasher.verify.return_value = True
 
     auth_result = auth_service.authenticate_user(
+      session=db_session,
+      id_generator=id_generator,
       user_repo=user_repo,
       password_hasher=password_hasher,
       username=existing_user.username,
@@ -129,7 +152,9 @@ class TestAuthService:
     auth_service,
     password_hasher,
     user_repo,
-    existing_user
+    existing_user,
+    db_session,
+    id_generator
   ):
     # login to get a valid token
     user_repo.get_user_by_username.return_value = existing_user
@@ -137,14 +162,19 @@ class TestAuthService:
 
     auth_result = auth_service.authenticate_user(
       user_repo=user_repo,
+      session=db_session,
+      id_generator=id_generator,
       password_hasher=password_hasher,
       username=existing_user.username,
       password="plaintextpassword"
     )
     refresh_token = auth_result.refresh_token
     user_repo.get_user_by_id.return_value = existing_user
+    user_repo.update_user.return_value = existing_user
 
     result = auth_service.refresh_access_token(
+      session=db_session,
+      id_generator=id_generator,
       user_repo=user_repo,
       token=refresh_token
     )

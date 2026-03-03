@@ -114,3 +114,24 @@ class AuthService:
       refresh_token=new_refresh_token.token,
       user=BasicUserDTO.model_validate(user.to_dict())
     )
+  
+  @staticmethod
+  def logout_user(
+    session: Session,
+    user_repo: IUserRepository,
+    user_id: str,
+  ) -> bool:
+    logger.info(f"Logging out user with user_id: {user_id}")
+    user = user_repo.get_user_by_id(user_id)
+    if not user:
+      logger.warning(f"Logout failed: User not found for user_id: {user_id}")
+      raise UnauthorizedException("User not found")
+    
+    user.access_token_id = None
+    user.refresh_token_id = None
+
+    user = user_repo.update_user(user_id=user.id, user=user)
+    session.commit()
+
+    logger.info(f"User logged out successfully for user_id: {user.id}")
+    return True

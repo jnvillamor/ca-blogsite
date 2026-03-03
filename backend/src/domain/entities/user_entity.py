@@ -92,7 +92,7 @@ class UserEntity:
     return self.__access_token_id
   
   @access_token_id.setter
-  def access_token_id(self, token_id: str):
+  def access_token_id(self, token_id: Optional[str]):
     self.__access_token_id = token_id
   
   @property
@@ -100,7 +100,7 @@ class UserEntity:
     return self.__refresh_token_id
   
   @refresh_token_id.setter
-  def refresh_token_id(self, token_id: str):
+  def refresh_token_id(self, token_id: Optional[str]):
     self.__refresh_token_id = token_id
     
   def to_dict(self) -> dict:

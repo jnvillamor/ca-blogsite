@@ -131,3 +131,38 @@ def refresh_token(
     token=token,
   )
   return auth_response
+
+@router.post(
+  "/logout",
+  status_code=status.HTTP_200_OK,
+  responses={
+    status.HTTP_200_OK: {
+      "description": "Successful logout",
+    },
+    status.HTTP_401_UNAUTHORIZED: {
+      "description": "Invalid token",
+    },
+    status.HTTP_500_INTERNAL_SERVER_ERROR: {
+      "description": "Internal server error",
+    },
+  }
+)
+@router.post(
+  "/logout/",
+  include_in_schema=False
+)
+def logout(
+  request: Request,
+  session=Depends(get_db), 
+  current_user: UserEntity = Depends(get_current_user)
+):
+  user_repo = UserRepository(session)
+  result = AuthService.logout_user(
+    session=session,
+    user_repo=user_repo,
+    user_id=current_user.id,
+  )
+  if result:
+    return Response(content="Successful logout", status_code=status.HTTP_200_OK)
+  else:
+    return Response(content="Internal server error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)

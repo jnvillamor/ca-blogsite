@@ -17,7 +17,9 @@ class UserEntity:
     password: str,
     avatar: Optional[str] = None,
     created_at: Optional[datetime] = None,
-    updated_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None,
+    access_token_id: Optional[str] = None,
+    refresh_token_id: Optional[str] = None
   ):
     self.__id = id
     self.__first_name = FirstName(first_name) 
@@ -27,6 +29,8 @@ class UserEntity:
     self.__avatar = avatar
     self.__created_at = created_at or datetime.now(timezone.utc)
     self.__updated_at = updated_at or datetime.now(timezone.utc)
+    self.__access_token_id = access_token_id
+    self.__refresh_token_id = refresh_token_id
   
   @property
   def id(self) -> str:
@@ -82,6 +86,22 @@ class UserEntity:
   @property
   def updated_at(self) -> datetime:
     return self.__updated_at
+  
+  @property
+  def access_token_id(self) -> Optional[str]:
+    return self.__access_token_id
+  
+  @access_token_id.setter
+  def access_token_id(self, token_id: str):
+    self.__access_token_id = token_id
+  
+  @property
+  def refresh_token_id(self) -> Optional[str]:
+    return self.__refresh_token_id
+  
+  @refresh_token_id.setter
+  def refresh_token_id(self, token_id: str):
+    self.__refresh_token_id = token_id
     
   def to_dict(self) -> dict:
     return {
@@ -91,6 +111,8 @@ class UserEntity:
       "username": self.username,
       "password": self.password,
       "avatar": self.avatar,
+      "access_token_id": self.access_token_id,
+      "refresh_token_id": self.refresh_token_id,
       "created_at": self.created_at,
       "updated_at": self.updated_at
     }

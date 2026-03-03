@@ -12,7 +12,7 @@ from app.api.dependencies import get_current_user
 from app.auth import AuthService, AuthResponse
 from app.database.db import get_db
 from app.repositories import UserRepository
-from app.services import PasswordHasher
+from app.services import PasswordHasher, UuidGenerator
 from src.application.dto import UserResponseDTO
 from src.domain.entities import UserEntity
 
@@ -47,7 +47,11 @@ def login(
 ):
   user_repo = UserRepository(session)
   password_hasher = PasswordHasher()
+  id_generator = UuidGenerator()
+
   auth_response = AuthService.authenticate_user(
+    session=session,
+    id_generator=id_generator,
     user_repo=user_repo,
     password_hasher=password_hasher,
     username=form_data.username,
@@ -107,9 +111,9 @@ def get_authenticated_user(
 def refresh_token(
   request: Request,
   session=Depends(get_db), 
-  current_user: UserEntity = Depends(get_current_user)
 ):
   user_repo = UserRepository(session)
+  id_generator = UuidGenerator()
   token = request.headers.get("Authorization")
   if token and token.startswith("Bearer "):
     token = token.split(" ")[1]
@@ -121,6 +125,8 @@ def refresh_token(
     return Response(content="Missing token", status_code=status.HTTP_401_UNAUTHORIZED)
   
   auth_response = AuthService.refresh_access_token(
+    session=session,
+    id_generator=id_generator,
     user_repo=user_repo,
     token=token,
   )

@@ -12,6 +12,8 @@ class UserModel(Base):
   username: Mapped[str] = mapped_column(String(20), unique=True, nullable=False, index=True)
   password: Mapped[str] = mapped_column(String(255), nullable=False)
   avatar: Mapped[Optional[str]] = mapped_column(nullable=True)
+  access_token_id: Mapped[Optional[str]] = mapped_column(String(), nullable=True)
+  refresh_token_id: Mapped[Optional[str]] = mapped_column(String(), nullable=True)
   created_at: Mapped[str] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
   updated_at: Mapped[str] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
 
@@ -23,6 +25,8 @@ class UserModel(Base):
       "username": self.username,
       "password": self.password,
       "avatar": self.avatar,
+      "access_token_id": self.access_token_id,
+      "refresh_token_id": self.refresh_token_id,
       "created_at": self.created_at,
       "updated_at": self.updated_at
     }

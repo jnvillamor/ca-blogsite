@@ -9,14 +9,12 @@ class TokenType(Enum):
 
 class TokenData(BaseModel):
   user_id: str 
+  token_id: str
 
 class Token(BaseModel):
   token: str
-  ttl: int
 
 class AuthResponse(BaseModel):
   access_token: str
-  access_token_ttl: int
   refresh_token: str
-  refresh_token_ttl: int
   user: BasicUserDTO

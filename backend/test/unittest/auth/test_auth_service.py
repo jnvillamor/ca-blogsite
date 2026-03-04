@@ -1,13 +1,15 @@
 import pytest
 from datetime import datetime, timezone
+from unittest.mock import AsyncMock
 
 from app.auth import AuthService
 from src.domain.entities import UserEntity
 
+
 @pytest.fixture
 def password_hasher(mocker):
-  hasher = mocker.Mock()
-  return hasher
+  return mocker.Mock()
+
 
 @pytest.fixture
 def id_generator(mocker):
@@ -15,14 +17,20 @@ def id_generator(mocker):
   generator.generate.side_effect = lambda: f"token-{datetime.now().timestamp()}"
   return generator
 
+
 @pytest.fixture
 def user_repo(mocker):
   repo = mocker.Mock()
+  repo.get_user_by_username = AsyncMock()
+  repo.get_user_by_id = AsyncMock()
+  repo.update_user = AsyncMock()
   return repo
+
 
 @pytest.fixture
 def auth_service():
   return AuthService()
+
 
 @pytest.fixture
 def existing_user():
@@ -35,12 +43,15 @@ def existing_user():
     avatar=None,
     access_token_id=None,
     refresh_token_id=None,
-    created_at=datetime(2023, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
-    updated_at=datetime(2023, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+    created_at=datetime(2023,1,1,12,0,0,tzinfo=timezone.utc),
+    updated_at=datetime(2023,1,1,12,0,0,tzinfo=timezone.utc)
   )
 
+
 class TestAuthService:
-  def test_authenticate_user_success(
+
+  @pytest.mark.asyncio
+  async def test_authenticate_user_success(
     self,
     auth_service,
     user_repo,
@@ -52,7 +63,7 @@ class TestAuthService:
     user_repo.get_user_by_username.return_value = existing_user
     password_hasher.verify.return_value = True
 
-    result = auth_service.authenticate_user(
+    result = await auth_service.authenticate_user(
       session=db_session,
       id_generator=id_generator,
       user_repo=user_repo,
@@ -64,8 +75,10 @@ class TestAuthService:
     assert result.access_token is not None
     assert result.refresh_token is not None
     assert result.user.username == existing_user.username
-  
-  def test_authenticate_user_invalid_credentials(
+
+
+  @pytest.mark.asyncio
+  async def test_authenticate_user_invalid_credentials(
     self,
     auth_service,
     user_repo,
@@ -76,16 +89,18 @@ class TestAuthService:
     user_repo.get_user_by_username.return_value = None
 
     with pytest.raises(Exception):
-      auth_service.authenticate_user(
+      await auth_service.authenticate_user(
         session=db_session,
-        id_generator=id_generator,  
+        id_generator=id_generator,
         user_repo=user_repo,
         password_hasher=password_hasher,
         username="nonexistent",
         password="plaintextpassword"
       )
-  
-  def test_authenticate_user_wrong_password(
+
+
+  @pytest.mark.asyncio
+  async def test_authenticate_user_wrong_password(
     self,
     auth_service,
     user_repo,
@@ -98,7 +113,7 @@ class TestAuthService:
     password_hasher.verify.return_value = False
 
     with pytest.raises(Exception):
-      auth_service.authenticate_user(
+      await auth_service.authenticate_user(
         session=db_session,
         id_generator=id_generator,
         user_repo=user_repo,
@@ -107,7 +122,9 @@ class TestAuthService:
         password="wrongpassword"
       )
 
-  def test_get_current_user_success(
+
+  @pytest.mark.asyncio
+  async def test_get_current_user_success(
     self,
     auth_service,
     password_hasher,
@@ -116,11 +133,10 @@ class TestAuthService:
     db_session,
     id_generator
   ):
-    # login to get a valid token
     user_repo.get_user_by_username.return_value = existing_user
     password_hasher.verify.return_value = True
 
-    auth_result = auth_service.authenticate_user(
+    auth_result = await auth_service.authenticate_user(
       session=db_session,
       id_generator=id_generator,
       user_repo=user_repo,
@@ -128,26 +144,34 @@ class TestAuthService:
       username=existing_user.username,
       password="plaintextpassword"
     )
+
     token = auth_result.access_token
+
     user_repo.get_user_by_id.return_value = existing_user
-    result = auth_service.get_current_user(
+
+    result = await auth_service.get_current_user(
       user_repo=user_repo,
       token=token
     )
+
     assert result.username == existing_user.username
-  
-  def test_get_current_user_invalid_token(
+
+
+  @pytest.mark.asyncio
+  async def test_get_current_user_invalid_token(
     self,
     auth_service,
     user_repo
   ):
     with pytest.raises(Exception):
-      auth_service.get_current_user(
+      await auth_service.get_current_user(
         user_repo=user_repo,
         token="invalidtoken"
       )
-  
-  def test_refresh_access_token_success(
+
+
+  @pytest.mark.asyncio
+  async def test_refresh_access_token_success(
     self,
     auth_service,
     password_hasher,
@@ -156,40 +180,43 @@ class TestAuthService:
     db_session,
     id_generator
   ):
-    # login to get a valid token
     user_repo.get_user_by_username.return_value = existing_user
     password_hasher.verify.return_value = True
 
-    auth_result = auth_service.authenticate_user(
-      user_repo=user_repo,
+    auth_result = await auth_service.authenticate_user(
       session=db_session,
       id_generator=id_generator,
+      user_repo=user_repo,
       password_hasher=password_hasher,
       username=existing_user.username,
       password="plaintextpassword"
     )
+
     refresh_token = auth_result.refresh_token
+
     user_repo.get_user_by_id.return_value = existing_user
     user_repo.update_user.return_value = existing_user
 
-    result = auth_service.refresh_access_token(
+    result = await auth_service.refresh_access_token(
       session=db_session,
       id_generator=id_generator,
       user_repo=user_repo,
       token=refresh_token
     )
+
     assert result.access_token is not None
     assert result.refresh_token is not None
     assert result.user.username == existing_user.username
 
-  def test_refresh_access_token_invalid_token(
+
+  @pytest.mark.asyncio
+  async def test_refresh_access_token_invalid_token(
     self,
     auth_service,
     user_repo
   ):
     with pytest.raises(Exception):
-      auth_service.refresh_access_token(
+      await auth_service.refresh_access_token(
         user_repo=user_repo,
         token="invalidtoken"
       )
-  

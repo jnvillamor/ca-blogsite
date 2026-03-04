@@ -13,8 +13,8 @@ def get_user_repository(
 ) -> IUserRepository:
   return UserRepository(session)
 
-def get_current_user(
+async def get_current_user(
   user_repo: IUserRepository = Depends(get_user_repository),
   token: str = Depends(oauth2_scheme),
 ) -> UserEntity:
-  return AuthService.get_current_user(user_repo, token)
+  return await AuthService.get_current_user(user_repo, token)

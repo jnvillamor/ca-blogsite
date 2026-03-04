@@ -1,43 +1,51 @@
 import re
 import pytest
-from fastapi.testclient import TestClient
 
 class TestCreateUserEndpoint:
-  def test_create_user_success(self, client: TestClient):
+
+  @pytest.mark.asyncio
+  async def test_create_user_success(self, client, api_version):
     payload = {
       "first_name": "John",
       "last_name": "Doe",
       "username": "johndoe",
       "password": "SecurePass.123"
     }
-    response = client.post("v1/users/register", json=payload)
+
+    response = await client.post(f"/{api_version}/users/register", json=payload)
 
     assert response.status_code == 201
     data = response.json()
+
     for key in payload:
       if key != "password":
         assert data[key] == payload[key]
+
     assert "id" in data
     assert "created_at" in data
     assert "updated_at" in data
-  
-  def test_create_user_conflict(self, client: TestClient):
+
+
+  @pytest.mark.asyncio
+  async def test_create_user_conflict(self, client, api_version):
     payload = {
       "first_name": "Jane",
       "last_name": "Doe",
       "username": "janedoe",
       "password": "AnotherPass.456"
     }
-    # First creation should succeed
-    response1 = client.post("v1/users/register", json=payload)
+
+    response1 = await client.post(f"/{api_version}/users/register", json=payload)
     assert response1.status_code == 201
 
-    # Second creation with same username should fail
-    response2 = client.post("v1/users/register", json=payload)
+    response2 = await client.post(f"/{api_version}/users/register", json=payload)
     assert response2.status_code == 409
+
     data = response2.json()
     assert data["detail"] == f"The username '{payload['username']}' is already taken."
-  
+
+
+  @pytest.mark.asyncio
   @pytest.mark.parametrize(
     "field, invalid_value, error_regex",
     [
@@ -54,9 +62,10 @@ class TestCreateUserEndpoint:
       ("username", "a" * 21, r"Username cannot exceed \d+ characters"),
     ]
   )
-  def test_create_user_invalid_names(
+  async def test_create_user_invalid_names(
     self,
-    client: TestClient,
+    client,
+    api_version,
     field: str,
     invalid_value: str,
     error_regex: str
@@ -67,15 +76,19 @@ class TestCreateUserEndpoint:
       "username": "johndoe",
       "password": "SecurePass.123"
     }
+
     payload[field] = invalid_value
 
-    response = client.post("v1/users/register", json=payload)
+    response = await client.post(f"/{api_version}/users/register", json=payload)
+
     assert response.status_code == 400
     data = response.json()
 
     assert "detail" in data
     assert re.match(error_regex, data["detail"])
-  
+
+
+  @pytest.mark.asyncio
   @pytest.mark.parametrize(
     "password, error_regex",
     [
@@ -87,10 +100,10 @@ class TestCreateUserEndpoint:
       ("NoSpecial1", r"at least one special character"),
     ]
   )
-
-  def test_create_user_invalid_password(
+  async def test_create_user_invalid_password(
     self,
-    client: TestClient,
+    client,
+    api_version,
     password: str,
     error_regex: str
   ):
@@ -101,7 +114,8 @@ class TestCreateUserEndpoint:
       "password": password
     }
 
-    response = client.post("v1/users/register", json=payload)
+    response = await client.post(f"/{api_version}/users/register", json=payload)
+
     assert response.status_code == 400
     data = response.json()
 

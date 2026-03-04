@@ -1,21 +1,21 @@
 import re
 import pytest
-from fastapi.testclient import TestClient
+from httpx import AsyncClient
 
 class TestCreateBlogEndpoint:
-  def test_create_blog_success(
+  async def test_create_blog_success(
     self, 
     api_version,
     existing_users,
     create_existing_users,
-    client: TestClient,
+    client: AsyncClient,
   ):
     payload = {
       "title": "My First Blog",
       "content": "This is the content of my first blog.",
       "author_id": existing_users[0]["id"]
     }
-    response = client.post(f"/{api_version}/blogs/", json=payload)
+    response = await client.post(f"/{api_version}/blogs/", json=payload)
 
     assert response.status_code == 201
     data = response.json()
@@ -25,13 +25,13 @@ class TestCreateBlogEndpoint:
     assert "created_at" in data
     assert "updated_at" in data
   
-  def test_create_blog_user_not_found(self, api_version, client: TestClient):
+  async def test_create_blog_user_not_found(self, api_version, client: AsyncClient):
     payload = {
       "title": "Blog with Invalid Author",
       "content": "This blog has an invalid author_id.",
       "author_id": "nonexistent-user-id"
     }
-    response = client.post(f"/{api_version}/blogs/", json=payload)
+    response = await client.post(f"/{api_version}/blogs/", json=payload)
 
     assert response.status_code == 400
     data = response.json()
@@ -46,12 +46,12 @@ class TestCreateBlogEndpoint:
       ("T" * 101, r"Title cannot exceed 100 characters.")
     ]
   )
-  def test_create_blog_invalid_title(
+  async def test_create_blog_invalid_title(
     self,
     existing_users,
     api_version,
     create_existing_users,
-    client: TestClient,
+    client: AsyncClient,
     title,
     error_regex
   ):
@@ -60,7 +60,7 @@ class TestCreateBlogEndpoint:
       "content": "Valid content for testing.",
       "author_id": existing_users[0]["id"]
     }
-    response = client.post(f"/{api_version}/blogs/", json=payload)
+    response = await client.post(f"/{api_version}/blogs/", json=payload)
 
     assert response.status_code == 400
     data = response.json()
@@ -73,12 +73,12 @@ class TestCreateBlogEndpoint:
       (" " * 10, r"Content cannot be empty.")
     ]
   )
-  def test_invalid_content(
+  async def test_invalid_content(
     self,
     api_version,
     existing_users,
     create_existing_users,
-    client: TestClient,
+    client: AsyncClient,
     content,
     error_regex
   ):
@@ -87,7 +87,7 @@ class TestCreateBlogEndpoint:
       "content": content,
       "author_id": existing_users[0]["id"]
     }
-    response = client.post(f"/{api_version}/blogs/", json=payload)
+    response = await client.post(f"/{api_version}/blogs/", json=payload)
 
     assert response.status_code == 400
     data = response.json()

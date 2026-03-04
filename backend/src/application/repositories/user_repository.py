@@ -4,7 +4,7 @@ from src.domain.entities import UserEntity
 
 class IUserRepository(ABC):
   @abstractmethod
-  def create_user(self, user: UserEntity) -> UserEntity:
+  async def create_user(self, user: UserEntity) -> UserEntity:
     """Create a new user.
 
     Args:
@@ -16,7 +16,7 @@ class IUserRepository(ABC):
     pass
   
   @abstractmethod
-  def get_user_by_id(self, user_id: str) -> Optional[UserEntity]:
+  async def get_user_by_id(self, user_id: str) -> Optional[UserEntity]:
     """Retrieve a user by their ID.
 
     Args:
@@ -28,7 +28,7 @@ class IUserRepository(ABC):
     pass
 
   @abstractmethod
-  def get_user_by_username(self, username: str) -> Optional[UserEntity]:
+  async def get_user_by_username(self, username: str) -> Optional[UserEntity]:
     """Retrieve a user by their username.
 
     Args:
@@ -40,7 +40,7 @@ class IUserRepository(ABC):
     pass
   
   @abstractmethod
-  def get_all_users(
+  async def get_all_users(
     self,
     skip: int = 0,
     limit: int = 10,
@@ -59,7 +59,7 @@ class IUserRepository(ABC):
     pass
   
   @abstractmethod
-  def update_user(self, user_id: str, user: UserEntity) -> UserEntity:
+  async def update_user(self, user_id: str, user: UserEntity) -> UserEntity:
     """Update an existing user.
 
     Args:
@@ -71,7 +71,7 @@ class IUserRepository(ABC):
     pass
   
   @abstractmethod
-  def delete_user(self, user_id: str) -> bool:
+  async def delete_user(self, user_id: str) -> bool:
     """Delete a user by their ID.
 
     Args:

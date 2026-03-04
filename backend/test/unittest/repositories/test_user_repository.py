@@ -1,9 +1,11 @@
 import pytest
 from datetime import datetime, timezone
-from sqlalchemy.orm import  Session
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.repositories import UserRepository
 from src.domain.exceptions import NotFoundException
 from src.domain.entities import UserEntity
+
 
 def make_user(
   id: str,
@@ -26,6 +28,7 @@ def make_user(
     updated_at=updated_at
   )
 
+
 def _normalize_datetime(dt: datetime) -> datetime:
   if dt.tzinfo is None:
     return dt.replace(tzinfo=timezone.utc)
@@ -43,74 +46,96 @@ def assert_user_equal(entity1: UserEntity, entity2: UserEntity):
   assert _normalize_datetime(entity1.updated_at) == _normalize_datetime(entity2.updated_at)
 
 
-# -------------------------
-# Tests
-# -------------------------
 class TestUserRepository:
 
-  def test_create_and_get_user(self, db_session: Session):
+  @pytest.mark.asyncio
+  async def test_create_and_get_user(self, db_session: AsyncSession):
     repo = UserRepository(db_session)
-    user = make_user("123")
-    repo.create_user(user)
 
-    # get by id
-    retrieved = repo.get_user_by_id("123")
+    user = make_user("123")
+    await repo.create_user(user)
+
+    retrieved = await repo.get_user_by_id("123")
+
     assert retrieved is not None
     assert_user_equal(retrieved, user)
 
-    # get by username
-    retrieved_by_username = repo.get_user_by_username("johndoe")
+    retrieved_by_username = await repo.get_user_by_username("johndoe")
+
     assert retrieved_by_username is not None
     assert_user_equal(retrieved_by_username, user)
 
-  def test_get_all_users(self, db_session: Session):
-    repo = UserRepository(db_session)
-    users = [make_user(str(i), username=f"user{i}") for i in range(3)]
-    for u in users:
-      repo.create_user(u)
 
-    retrieved_users, total_count = repo.get_all_users()
+  @pytest.mark.asyncio
+  async def test_get_all_users(self, db_session: AsyncSession):
+    repo = UserRepository(db_session)
+
+    users = [make_user(str(i), username=f"user{i}") for i in range(3)]
+
+    for u in users:
+      await repo.create_user(u)
+
+    retrieved_users, total_count = await repo.get_all_users()
+
     assert total_count == 3
     assert len(retrieved_users) == 3
+
     for u in users:
       assert any(u.username == ru.username for ru in retrieved_users)
 
-  def test_update_user(self, db_session: Session):
+
+  @pytest.mark.asyncio
+  async def test_update_user(self, db_session: AsyncSession):
     repo = UserRepository(db_session)
+
     user = make_user("999", first_name="Old", last_name="Name", username="olduser")
-    repo.create_user(user)
+    await repo.create_user(user)
 
     updated_user = make_user(
       "999",
       first_name="New",
       last_name="Name",
       username="newuser",
-      updated_at=datetime(2024, 2, 2, 0, 0, 0, tzinfo=timezone.utc)
+      updated_at=datetime(2024, 2, 2, tzinfo=timezone.utc)
     )
 
-    result = repo.update_user("999", updated_user)
+    result = await repo.update_user("999", updated_user)
+
     assert result is not None
     assert_user_equal(result, updated_user)
 
+
+  @pytest.mark.asyncio
   @pytest.mark.parametrize("user_id", ["nonexistent"])
-  def test_nonexistent_user(self, db_session: Session, user_id):
+  async def test_nonexistent_user(self, db_session: AsyncSession, user_id):
     repo = UserRepository(db_session)
-    assert repo.get_user_by_id(user_id) is None
-    assert repo.get_user_by_username("nonexistent") is None
+
+    assert await repo.get_user_by_id(user_id) is None
+    assert await repo.get_user_by_username("nonexistent") is None
+
     with pytest.raises(NotFoundException):
-      repo.update_user(user_id, make_user(user_id))
-    assert not repo.delete_user(user_id)
+      await repo.update_user(user_id, make_user(user_id))
 
-  def test_delete_user(self, db_session: Session):
+    assert not await repo.delete_user(user_id)
+
+
+  @pytest.mark.asyncio
+  async def test_delete_user(self, db_session: AsyncSession):
     repo = UserRepository(db_session)
+
     user = make_user("to_delete")
-    repo.create_user(user)
+    await repo.create_user(user)
 
-    repo.delete_user("to_delete")
-    assert repo.get_user_by_id("to_delete") is None
+    await repo.delete_user("to_delete")
 
-  def test_get_all_users_empty(self, db_session: Session):
+    assert await repo.get_user_by_id("to_delete") is None
+
+
+  @pytest.mark.asyncio
+  async def test_get_all_users_empty(self, db_session: AsyncSession):
     repo = UserRepository(db_session)
-    users, count = repo.get_all_users()
+
+    users, count = await repo.get_all_users()
+
     assert count == 0
     assert len(users) == 0

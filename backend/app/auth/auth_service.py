@@ -1,8 +1,9 @@
 import logging
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession 
 
 from .auth_model import AuthResponse, TokenData, TokenType
 from .token_service import TokenService
+
 from src.application.dto import BasicUserDTO
 from src.application.repositories import IUserRepository
 from src.application.services import IPasswordHasher, IIdGenerator
@@ -12,8 +13,8 @@ from src.domain.exceptions import UnauthorizedException
 logger = logging.getLogger(__name__)
 class AuthService:
   @staticmethod
-  def authenticate_user(
-    session: Session,
+  async def authenticate_user(
+    session: AsyncSession,
     id_generator: IIdGenerator,
     user_repo: IUserRepository,
     password_hasher: IPasswordHasher,
@@ -21,7 +22,7 @@ class AuthService:
     password: str,
   ) -> AuthResponse:
     logger.info(f"Attempting authentication for username: {username}")
-    user = user_repo.get_user_by_username(username)
+    user = await user_repo.get_user_by_username(username)
 
     if (
       not user
@@ -45,21 +46,21 @@ class AuthService:
 
     user.access_token_id = access_token_id
     user.refresh_token_id = refresh_token_id
-    user = user_repo.update_user(user_id=user.id, user=user)
-    session.commit()
+    user = await user_repo.update_user(user_id=user.id, user=user)
+    await session.commit()
 
     logger.info(f"Authentication successful for username: {username}, user_id: {user.id}")
     return result
   
   @staticmethod
-  def get_current_user(
+  async def get_current_user(
     user_repo: IUserRepository,
     token: str,
   ) -> UserEntity:
     logger.info(f"Getting current user from token.")
     token_data = TokenService.verify_token(token)
 
-    user = user_repo.get_user_by_id(token_data.user_id)
+    user = await user_repo.get_user_by_id(token_data.user_id)
     token_id = token_data.token_id
 
     if not user:
@@ -73,8 +74,8 @@ class AuthService:
     return user
   
   @staticmethod
-  def refresh_access_token(
-    session: Session,
+  async def refresh_access_token(
+    session: AsyncSession,
     id_generator: IIdGenerator,
     user_repo: IUserRepository,
     token: str,
@@ -82,7 +83,7 @@ class AuthService:
     logger.info(f"Refreshing access token.")
     token_data = TokenService.verify_token(token)
 
-    user = user_repo.get_user_by_id(token_data.user_id)
+    user = await user_repo.get_user_by_id(token_data.user_id)
     token_id = token_data.token_id
 
     if not user:
@@ -105,8 +106,8 @@ class AuthService:
 
     user.access_token_id = new_access_token_id
     user.refresh_token_id = new_refresh_token_id
-    user = user_repo.update_user(user_id=user.id, user=user)
-    session.commit()
+    user = await user_repo.update_user(user_id=user.id, user=user)
+    await session.commit()
 
     logger.info(f"Access token refreshed successfully for user_id: {user.id}")
     return AuthResponse(
@@ -116,13 +117,13 @@ class AuthService:
     )
   
   @staticmethod
-  def logout_user(
-    session: Session,
+  async def logout_user(
+    session: AsyncSession,
     user_repo: IUserRepository,
     user_id: str,
   ) -> bool:
     logger.info(f"Logging out user with user_id: {user_id}")
-    user = user_repo.get_user_by_id(user_id)
+    user = await user_repo.get_user_by_id(user_id)
     if not user:
       logger.warning(f"Logout failed: User not found for user_id: {user_id}")
       raise UnauthorizedException("User not found")
@@ -130,8 +131,8 @@ class AuthService:
     user.access_token_id = None
     user.refresh_token_id = None
 
-    user = user_repo.update_user(user_id=user.id, user=user)
-    session.commit()
+    user = await user_repo.update_user(user_id=user.id, user=user)
+    await session.commit()
 
     logger.info(f"User logged out successfully for user_id: {user.id}")
     return True

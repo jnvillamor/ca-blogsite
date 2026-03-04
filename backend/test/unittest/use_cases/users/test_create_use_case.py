@@ -1,24 +1,35 @@
-import pytest 
+import pytest
 from datetime import datetime, timezone
+from unittest.mock import AsyncMock
+
 from src.application.dto import CreateUserDTO, UserResponseDTO
 from src.application.use_cases.users import CreateUserUseCase
 from src.domain.exceptions import UsernameExistsException, InvalidDataException
 
+
 class TestCreateUserUseCase:
+
   @pytest.fixture
   def uow(self, mocker):
     uow = mocker.MagicMock()
+
+    uow.__aenter__ = AsyncMock(return_value=uow)
+    uow.__aexit__ = AsyncMock(return_value=None)
+
     uow.users = mocker.Mock()
+    uow.users.get_user_by_username = AsyncMock()
+    uow.users.create_user = AsyncMock()
+
     return uow
-  
+
   @pytest.fixture
   def password_hasher(self, mocker):
     return mocker.Mock()
-  
+
   @pytest.fixture
   def id_generator(self, mocker):
     return mocker.Mock()
-  
+
   @pytest.fixture
   def use_case(self, uow, password_hasher, id_generator):
     return CreateUserUseCase(
@@ -26,7 +37,7 @@ class TestCreateUserUseCase:
       password_hasher=password_hasher,
       id_generator=id_generator
     )
-  
+
   @pytest.fixture
   def valid_user_data(self):
     return CreateUserDTO(
@@ -36,7 +47,7 @@ class TestCreateUserUseCase:
       password="SecurePass123!",
       avatar=None
     )
-  
+
   @pytest.fixture
   def existing_user_data(self):
     return UserResponseDTO(
@@ -45,70 +56,68 @@ class TestCreateUserUseCase:
       last_name="Doe",
       username="johndoe",
       avatar=None,
-      created_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
-      updated_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+      created_at=datetime(2024, 1, 1, tzinfo=timezone.utc),
+      updated_at=datetime(2024, 1, 1, tzinfo=timezone.utc)
     )
-  
-  def test_execute_success(
-    self, 
-    use_case, 
+
+  @pytest.mark.asyncio
+  async def test_execute_success(
+    self,
+    use_case,
     uow,
     password_hasher,
     id_generator,
     valid_user_data
   ):
-    # Arrange
     uow.users.get_user_by_username.return_value = None
-    
     password_hasher.hash.return_value = "hashed_password"
     id_generator.generate.return_value = "id123"
-    
-    uow.users.create_user.side_effect = lambda user: user 
-    
-    # Act
-    result = use_case.execute(valid_user_data)
 
-    # Assert
-    uow.users.get_user_by_username.assert_called_once_with("johndoe")
-    uow.users.create_user.assert_called_once()
+    uow.users.create_user.side_effect = lambda user: user
+
+    result = await use_case.execute(valid_user_data)
+
+    uow.users.get_user_by_username.assert_awaited_once_with("johndoe")
+    uow.users.create_user.assert_awaited_once()
     password_hasher.hash.assert_called_once_with("SecurePass123!")
     id_generator.generate.assert_called_once()
+
     assert result.first_name == "John"
     assert result.last_name == "Doe"
     assert result.username == "johndoe"
     assert result.id == "id123"
-    
-  def test_execute_username_exists(
+
+  @pytest.mark.asyncio
+  async def test_execute_username_exists(
     self,
     use_case,
     uow,
     valid_user_data,
     existing_user_data
   ):
-    # Arrange
     uow.users.get_user_by_username.return_value = existing_user_data
-    
-    # Act & Assert
-    with pytest.raises(UsernameExistsException, match=f"The username '{valid_user_data.username}' is already taken.") as exc_info:
-      use_case.execute(valid_user_data)
 
-    uow.users.get_user_by_username.assert_called_once_with("johndoe")
-  
-  # ─────────────────────────────
-  # Parameterized test for invalid passwords 
-  # ─────────────────────────────
+    with pytest.raises(
+      UsernameExistsException,
+      match=f"The username '{valid_user_data.username}' is already taken."
+    ):
+      await use_case.execute(valid_user_data)
+
+    uow.users.get_user_by_username.assert_awaited_once_with("johndoe")
+
+  @pytest.mark.asyncio
   @pytest.mark.parametrize(
     "password, error_regex",
     [
-        ("", r"Password cannot be empty"),
-        ("short", r"at least 8 characters"),
-        ("NoDigits!", r"at least one digit"),
-        ("nouppercase1!", r"at least one uppercase"),
-        ("NOLOWERCASE1!", r"at least one lowercase"),
-        ("NoSpecial1", r"at least one special character"),
+      ("", r"Password cannot be empty"),
+      ("short", r"at least 8 characters"),
+      ("NoDigits!", r"at least one digit"),
+      ("nouppercase1!", r"at least one uppercase"),
+      ("NOLOWERCASE1!", r"at least one lowercase"),
+      ("NoSpecial1", r"at least one special character"),
     ]
   )
-  def test_execute_invalid_password(
+  async def test_execute_invalid_password(
     self,
     use_case,
     uow,
@@ -116,19 +125,15 @@ class TestCreateUserUseCase:
     password,
     error_regex
   ):
-    # Arrange
     uow.users.get_user_by_username.return_value = None
     valid_user_data.password = password
-    
-    # Act & Assert
-    with pytest.raises(InvalidDataException, match=error_regex) as exc_info:
-      use_case.execute(valid_user_data)
 
-    uow.users.get_user_by_username.assert_called_once_with("johndoe")
-   
-  # ─────────────────────────────
-  # Parameterized test for invalid names
-  # ─────────────────────────────
+    with pytest.raises(InvalidDataException, match=error_regex):
+      await use_case.execute(valid_user_data)
+
+    uow.users.get_user_by_username.assert_awaited_once_with("johndoe")
+
+  @pytest.mark.asyncio
   @pytest.mark.parametrize(
     "field, invalid_value, error_regex",
     [
@@ -145,7 +150,7 @@ class TestCreateUserUseCase:
       ("username", "a" * 21, r"Username cannot exceed \d+ characters"),
     ]
   )
-  def test_execute_invalid_names(
+  async def test_execute_invalid_names(
     self,
     use_case,
     uow,
@@ -154,15 +159,13 @@ class TestCreateUserUseCase:
     invalid_value,
     error_regex
   ):
-    # Arrange
     uow.users.get_user_by_username.return_value = None
     setattr(valid_user_data, field, invalid_value)
-    
-    # Act & Assert
-    with pytest.raises(InvalidDataException, match=error_regex) as exc_info:
-      use_case.execute(valid_user_data)
-    
+
+    with pytest.raises(InvalidDataException, match=error_regex):
+      await use_case.execute(valid_user_data)
+
     if field == "username":
-      uow.users.get_user_by_username.assert_called_once_with(invalid_value)
+      uow.users.get_user_by_username.assert_awaited_once_with(invalid_value)
     else:
-      uow.users.get_user_by_username.assert_called_once_with(valid_user_data.username)
+      uow.users.get_user_by_username.assert_awaited_once_with(valid_user_data.username)

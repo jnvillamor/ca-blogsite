@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Configurations(BaseSettings):
   APP_NAME: str = "Clean Architecture Blogsite"
-  DATABASE_URL: str = "sqlite:///./test.db"
+  DATABASE_URL: str = "postgresql+asyncpg://user:password@host:5432/db"
   DEBUG: bool = True
   DB_ECHO: bool = False
   SECRET_KEY: str = "your_secret_key"

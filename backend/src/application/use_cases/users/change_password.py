@@ -13,7 +13,7 @@ class ChangePasswordUseCase:
     self.uow = unit_of_work
     self.password_hasher = password_hasher
 
-  def execute(
+  async def execute(
     self, 
     active_user: UserEntity,
     user_id: str, 
@@ -22,8 +22,8 @@ class ChangePasswordUseCase:
     if not active_user:
       raise UnauthorizedException("You must be authenticated to change a password.")
 
-    with self.uow:
-      user = self.uow.users.get_user_by_id(user_id)
+    async with self.uow:
+      user = await self.uow.users.get_user_by_id(user_id)
 
       if not user:
         raise NotFoundException("User", f"user_id: {user_id}")
@@ -42,5 +42,5 @@ class ChangePasswordUseCase:
       hashed_new_password = self.password_hasher.hash(data.new_password)
 
       user.password = hashed_new_password
-      updated_user = self.uow.users.update_user(user_id, user)
+      updated_user = await self.uow.users.update_user(user_id, user)
       return UserResponseDTO.model_validate(updated_user.to_dict())

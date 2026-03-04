@@ -1,12 +1,15 @@
 import re
 import pytest
-from fastapi.testclient import TestClient
+
 
 class TestUpdateUserEndpoint:
-  def test_update_user_success(
-    self, 
-    authenticated_client: TestClient, 
-    create_existing_users
+
+  @pytest.mark.asyncio
+  async def test_update_user_success(
+    self,
+    authenticated_client,
+    create_existing_users,
+    api_version
   ):
     payload = {
       "first_name": "Arya",
@@ -14,12 +17,19 @@ class TestUpdateUserEndpoint:
       "username": "aryastark",
     }
 
-    response = authenticated_client.put("v1/users/user1", json=payload)
+    response = await authenticated_client.put(
+      f"/{api_version}/users/user1",
+      json=payload
+    )
+
     assert response.status_code == 200
     data = response.json()
+
     for key in payload:
       assert data[key] == payload[key]
-  
+
+
+  @pytest.mark.asyncio
   @pytest.mark.parametrize(
     "field, invalid_value, error_regex",
     [
@@ -36,66 +46,105 @@ class TestUpdateUserEndpoint:
       ("username", "a" * 21, r"Username cannot exceed \d+ characters"),
     ]
   )
-  def test_invalid_value(
+  async def test_invalid_value(
     self,
     create_existing_users,
-    authenticated_client: TestClient,
+    authenticated_client,
+    api_version,
     field: str,
     invalid_value: str,
     error_regex: str
   ):
-    payload = { field: invalid_value }
+    payload = {field: invalid_value}
 
-    response = authenticated_client.put("v1/users/user1", json=payload)
+    response = await authenticated_client.put(
+      f"/{api_version}/users/user1",
+      json=payload
+    )
+
     assert response.status_code == 400
     data = response.json()
+
     assert "detail" in data
     assert re.match(error_regex, data["detail"])
-  
-  def test_update_nonexistent_user(self, authenticated_client: TestClient):
+
+
+  @pytest.mark.asyncio
+  async def test_update_nonexistent_user(
+    self,
+    authenticated_client,
+    api_version
+  ):
     payload = {
       "first_name": "Non",
       "last_name": "Existent",
       "username": "nonexistentuser",
     }
 
-    response = authenticated_client.put("v1/users/nonexistent", json=payload)
+    response = await authenticated_client.put(
+      f"/{api_version}/users/nonexistent",
+      json=payload
+    )
+
     assert response.status_code == 404
     data = response.json()
+
     assert data["detail"] == "User with identifier 'user_id: nonexistent' was not found."
-  
-  def test_update_user_duplicate_username(
+
+
+  @pytest.mark.asyncio
+  async def test_update_user_duplicate_username(
     self,
     create_existing_users,
-    authenticated_client: TestClient
+    authenticated_client,
+    api_version
   ):
     payload = {
       "first_name": "New",
       "last_name": "Name",
-      "username": "bobjohnson",  # username already taken by another user
+      "username": "bobjohnson",
     }
 
-    response = authenticated_client.put("v1/users/user1", json=payload)
+    response = await authenticated_client.put(
+      f"/{api_version}/users/user1",
+      json=payload
+    )
+
     assert response.status_code == 400
     data = response.json()
+
     assert data["detail"] == "The username 'bobjohnson' is already taken."
-  
-  def test_update_user_unauthenticated(self, client: TestClient):
+
+
+  @pytest.mark.asyncio
+  async def test_update_user_unauthenticated(
+    self,
+    client,
+    api_version
+  ):
     payload = {
       "first_name": "Unauth",
       "last_name": "User",
       "username": "unauthuser",
     }
 
-    response = client.put("v1/users/user1", json=payload)
+    response = await client.put(
+      f"/{api_version}/users/user1",
+      json=payload
+    )
+
     assert response.status_code == 401
     data = response.json()
+
     assert data["detail"] == "Not authenticated"
 
-  def test_update_unauthorized(
+
+  @pytest.mark.asyncio
+  async def test_update_unauthorized(
     self,
-    authenticated_client: TestClient,
-    create_existing_users
+    authenticated_client,
+    create_existing_users,
+    api_version
   ):
     payload = {
       "first_name": "Mismatch",
@@ -103,7 +152,12 @@ class TestUpdateUserEndpoint:
       "username": "mismatchuser",
     }
 
-    response = authenticated_client.put("v1/users/user2", json=payload)  # user2 is different from user1 in payload
+    response = await authenticated_client.put(
+      f"/{api_version}/users/user2",
+      json=payload
+    )
+
     assert response.status_code == 401
     data = response.json()
+
     assert data["detail"] == "You are not authorized to update this user."

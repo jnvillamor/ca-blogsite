@@ -4,7 +4,7 @@ from src.domain.entities import BlogEntity
 
 class IBlogRepository(ABC):
   @abstractmethod
-  def create_blog(self, blog: BlogEntity) -> BlogEntity:
+  async def create_blog(self, blog: BlogEntity) -> BlogEntity:
     """Create a new blog.
 
     Args:
@@ -16,7 +16,7 @@ class IBlogRepository(ABC):
     pass
 
   @abstractmethod
-  def get_blog_by_id(self, blog_id: str) -> Optional[BlogEntity]:
+  async def get_blog_by_id(self, blog_id: str) -> Optional[BlogEntity]:
     """Retrieve a blog by its ID.
 
     Args:
@@ -28,7 +28,7 @@ class IBlogRepository(ABC):
     pass
 
   @abstractmethod
-  def get_all_blogs(
+  async def get_all_blogs(
     self,
     skip: int = 0,
     limit: int = 10,
@@ -47,7 +47,7 @@ class IBlogRepository(ABC):
     pass
 
   @abstractmethod
-  def get_all_blogs_by_author(
+  async def get_all_blogs_by_author(
     self,
     author_id: str,
     skip: int = 0,
@@ -68,7 +68,7 @@ class IBlogRepository(ABC):
     pass
 
   @abstractmethod
-  def update_blog(self, blog_id: str, blog: BlogEntity) -> BlogEntity:
+  async def update_blog(self, blog_id: str, blog: BlogEntity) -> BlogEntity:
     """Update an existing blog.
 
     Args:
@@ -81,7 +81,7 @@ class IBlogRepository(ABC):
     pass
 
   @abstractmethod
-  def delete_blog(self, blog_id: str) -> bool:
+  async def delete_blog(self, blog_id: str) -> bool:
     """Delete a blog by its ID.
 
     Args:

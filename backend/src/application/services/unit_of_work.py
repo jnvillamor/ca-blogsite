@@ -9,17 +9,17 @@ class IUnitOfWork(ABC):
   blogs: IBlogRepository
   
   @abstractmethod
-  def __enter__(self) -> 'IUnitOfWork':
+  async def __aenter__(self) -> 'IUnitOfWork':
     pass
   
   @abstractmethod
-  def __exit__(self, *args):
+  async def __aexit__(self, *args):
     pass
   
   @abstractmethod
-  def commit(self):
+  async def commit(self):
     pass
   
   @abstractmethod
-  def rollback(self):
+  async def rollback(self):
     pass

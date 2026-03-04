@@ -1,7 +1,7 @@
 import logging
 from fastapi import APIRouter, Request, Depends, status
 from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession 
 
 from ..dependencies import get_current_user 
 from app.database.db import get_db
@@ -41,10 +41,10 @@ router = APIRouter(
     500: {"description": "Internal Server Error."}
   }
 )
-def create_blog(
+async def create_blog(
   request: Request,
   blog_data: CreateBlogDTO,
-  session: Session = Depends(get_db)
+  session: AsyncSession = Depends(get_db)
 ):
   logger.info(f"Creating blog with title: {blog_data.title} for author_id: {blog_data.author_id}")
   uuid_generator = UuidGenerator()
@@ -53,7 +53,7 @@ def create_blog(
     unit_of_work=unit_of_work,
     id_generator=uuid_generator
   )
-  blog = use_case.execute(blog_data)
+  blog = await use_case.execute(blog_data)
   logger.info(f"Blog created with id: {blog.id}")
   return blog
 
@@ -68,15 +68,15 @@ def create_blog(
     500: {"description": "Internal Server Error."}
   }
 )
-def list_blogs(
+async def list_blogs(
   request: Request,
   pagination: PaginationDTO = Depends(),
-  session: Session = Depends(get_db)
+  session: AsyncSession = Depends(get_db)
 ):
   logger.info(f"Listing blogs with pagination: skip: {pagination.skip}, limit: {pagination.limit}")
   blog_repository = BlogRepository(session)
   use_case = GetBlogUseCase(blog_repository)
-  result = use_case.get_all_blogs(pagination)
+  result = await use_case.get_all_blogs(pagination)
   logger.info(f"Number of blogs retrieved: {len(result.items)}")
   return result
 
@@ -95,15 +95,15 @@ def list_blogs(
   "/{blog_id}/",
   include_in_schema=False
 )
-def get_blog(
+async def get_blog(
   request: Request,
   blog_id: str,
-  session: Session = Depends(get_db)
+  session: AsyncSession = Depends(get_db)
 ):
   logger.info(f"Fetching blog with id: {blog_id}")
   blog_repository = BlogRepository(session)
   use_case = GetBlogUseCase(blog_repository)
-  blog = use_case.get_by_id(blog_id)
+  blog = await use_case.get_by_id(blog_id)
   if blog is None:
     logger.warning(f"Blog with id: {blog_id} not found.")
     return JSONResponse(
@@ -128,16 +128,16 @@ def get_blog(
   "/author/{author_id}/",
   include_in_schema=False
 )
-def get_blogs_by_author(
+async def get_blogs_by_author(
   request: Request,
   author_id: str,
   pagination: PaginationDTO = Depends(),
-  session: Session = Depends(get_db)
+  session: AsyncSession = Depends(get_db)
 ):
   logger.info(f"Fetching blogs for author_id: {author_id} with pagination: skip: {pagination.skip}, limit: {pagination.limit}")
   blog_repository = BlogRepository(session)
   use_case = GetBlogUseCase(blog_repository)
-  result = use_case.get_all_blogs_by_author(author_id, pagination)
+  result = await use_case.get_all_blogs_by_author(author_id, pagination)
   logger.info(f"Number of blogs fetched for author_id '{author_id}': {len(result.items)}")
   return result
 
@@ -157,17 +157,17 @@ def get_blogs_by_author(
   "/{blog_id}/",
   include_in_schema=False
 )
-def update_blog(
+async def update_blog(
   request: Request,
   blog_id: str,
   blog_data: UpdateBlogDTO,
-  session: Session = Depends(get_db),
+  session: AsyncSession = Depends(get_db),
   current_user: UserEntity = Depends(get_current_user)
 ):
   logger.info(f"Updating blog with id: {blog_id}")
   unit_of_work = get_uow(session)
   use_case = UpdateBlogUseCase(unit_of_work)
-  updated_blog = use_case.execute(
+  updated_blog = await use_case.execute(
     current_user,
     blog_id,
     blog_data
@@ -188,15 +188,15 @@ def update_blog(
   "/{blog_id}/",
   include_in_schema=False
 )
-def delete_blog(
+async def delete_blog(
   request: Request,
   blog_id: str,
-  session: Session = Depends(get_db),
+  session: AsyncSession = Depends(get_db),
   current_user: UserEntity = Depends(get_current_user)
 ):
   logger.info(f"Deleting blog with id: {blog_id}")
   unit_of_work = get_uow(session)
   use_case = DeleteBlogUseCase(unit_of_work)
-  use_case.execute(current_user, blog_id)
+  await use_case.execute(current_user, blog_id)
   logger.info(f"Blog with id: {blog_id} deleted successfully.")
   return JSONResponse(status_code=status.HTTP_204_NO_CONTENT, content=f"Blog with id '{blog_id}' deleted successfully.")

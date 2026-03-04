@@ -12,12 +12,12 @@ class CreateBlogUseCase:
     self.uow = unit_of_work
     self.id_generator = id_generator
 
-  def execute(
+  async def execute(
     self, 
     blog_data: CreateBlogDTO, 
   ) -> BlogResponseDTO:
-    with self.uow:
-      user = self.uow.users.get_user_by_id(blog_data.author_id)
+    async with self.uow:
+      user = await self.uow.users.get_user_by_id(blog_data.author_id)
 
       if not user:
         raise InvalidDataException("Author not found.")
@@ -31,6 +31,6 @@ class CreateBlogUseCase:
         author_id=blog_data.author_id,
         hero_image=blog_data.hero_image
       )
-      created_blog = self.uow.blogs.create_blog(new_blog)
+      created_blog = await self.uow.blogs.create_blog(new_blog)
 
       return BlogResponseDTO.model_validate(created_blog.to_dict())

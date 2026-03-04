@@ -1,7 +1,9 @@
 import pytest
 
 class TestDeleteBlogEndpoint:
-  def test_delete_blog_success(
+
+  @pytest.mark.asyncio
+  async def test_delete_blog_success(
     self,
     authenticated_client,
     api_version,
@@ -10,18 +12,19 @@ class TestDeleteBlogEndpoint:
     create_existing_blogs,
   ):
     blog_to_delete = existing_blogs[0]
-    response = authenticated_client.delete(
+    response = await authenticated_client.delete(
       f"/{api_version}/blogs/{blog_to_delete['id']}"
     )
 
     assert response.status_code == 204
   
-  def test_delete_blog_not_found(
+  @pytest.mark.asyncio
+  async def test_delete_blog_not_found(
     self, 
     authenticated_client, 
     api_version
   ):
-    response = authenticated_client.delete(
+    response = await authenticated_client.delete(
       f"/{api_version}/blogs/nonexistent-blog"
     )
 
@@ -30,7 +33,8 @@ class TestDeleteBlogEndpoint:
       "detail": "Blog with identifier 'blog_id: nonexistent-blog' was not found."
     }
   
-  def test_delete_blog_unauthorized(
+  @pytest.mark.asyncio
+  async def test_delete_blog_unauthorized(
     self, 
     authenticated_client, 
     api_version,
@@ -38,7 +42,7 @@ class TestDeleteBlogEndpoint:
     create_existing_blogs,
   ):
     blog_to_delete = existing_blogs[1]
-    response = authenticated_client.delete(
+    response = await authenticated_client.delete(
       f"/{api_version}/blogs/{blog_to_delete['id']}"
     )
 

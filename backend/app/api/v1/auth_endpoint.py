@@ -40,7 +40,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
   "/login/",
   include_in_schema=False
 )
-def login(
+async def login(
   response: Response,
   session=Depends(get_db), 
   form_data: OAuth2PasswordRequestForm = Depends(),
@@ -49,7 +49,7 @@ def login(
   password_hasher = PasswordHasher()
   id_generator = UuidGenerator()
 
-  auth_response = AuthService.authenticate_user(
+  auth_response = await AuthService.authenticate_user(
     session=session,
     id_generator=id_generator,
     user_repo=user_repo,
@@ -81,7 +81,7 @@ def login(
   "/me/",
   include_in_schema=False
 )
-def get_authenticated_user(
+async def get_authenticated_user(
   request: Request,
   current_user: UserEntity = Depends(get_current_user)
 ):
@@ -108,7 +108,7 @@ def get_authenticated_user(
   "/refresh/",
   include_in_schema=False
 )
-def refresh_token(
+async def refresh_token(
   request: Request,
   session=Depends(get_db), 
 ):
@@ -124,7 +124,7 @@ def refresh_token(
     logger.error("Missing token in refresh request")
     return Response(content="Missing token", status_code=status.HTTP_401_UNAUTHORIZED)
   
-  auth_response = AuthService.refresh_access_token(
+  auth_response = await AuthService.refresh_access_token(
     session=session,
     id_generator=id_generator,
     user_repo=user_repo,
@@ -151,13 +151,13 @@ def refresh_token(
   "/logout/",
   include_in_schema=False
 )
-def logout(
+async def logout(
   request: Request,
   session=Depends(get_db), 
   current_user: UserEntity = Depends(get_current_user)
 ):
   user_repo = UserRepository(session)
-  result = AuthService.logout_user(
+  result = await AuthService.logout_user(
     session=session,
     user_repo=user_repo,
     user_id=current_user.id,

@@ -1,33 +1,38 @@
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
-from typing import Generator
+from sqlalchemy.ext.asyncio import (
+    create_async_engine,
+    AsyncSession,
+    async_sessionmaker
+)
+from typing import AsyncGenerator
+
 from app.database.db import Base
 
-TEST_DB_URL = "sqlite:///:memory:"
+TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
 
-engine = create_engine(
+engine = create_async_engine(
   TEST_DB_URL,
-  connect_args={"check_same_thread": False},
+  echo=False
 )
 
-TestingSessionLocal = sessionmaker(
-  autocommit=False,
-  autoflush=False,
+TestingSessionLocal = async_sessionmaker(
   bind=engine,
+  expire_on_commit=False,
+  class_=AsyncSession
 )
+
 
 @pytest.fixture(scope="function")
-def db_session() -> Generator[Session, None, None]:
-  session = TestingSessionLocal()
-  try:
+async def db_session() -> AsyncGenerator[AsyncSession, None]:
+  async with TestingSessionLocal() as session:
     yield session
-  finally:
-    session.close()
-    Base.metadata.drop_all(bind=engine)
+
 
 @pytest.fixture(scope="function", autouse=True)
-def setup_database():
-  Base.metadata.create_all(bind=engine)
+async def setup_database():
+
+  async with engine.begin() as conn:
+    await conn.run_sync(Base.metadata.create_all)
   yield
-  Base.metadata.drop_all(bind=engine)
+  async with engine.begin() as conn:
+    await conn.run_sync(Base.metadata.drop_all)

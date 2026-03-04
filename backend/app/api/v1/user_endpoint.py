@@ -48,7 +48,7 @@ router = APIRouter(
   "/register/",
   include_in_schema=False
 )
-def register_user(
+async def register_user(
   request: Request,
   user_data: CreateUserDTO,
   session: Session = Depends(get_db)
@@ -62,7 +62,7 @@ def register_user(
     password_hasher=password_hasher,
     id_generator=uuid_generator
   )
-  result = use_case.execute(user_data)
+  result = await use_case.execute(user_data)
   logger.info(f"User registered with ID: {result.id}")
   return result
 
@@ -76,7 +76,7 @@ def register_user(
     500: {"description": "Internal Server Error."}
   }
 )
-def get_users(
+async def get_users(
   request: Request,
   pagination: PaginationDTO = Depends(),
   session: Session = Depends(get_db),
@@ -84,7 +84,7 @@ def get_users(
   logger.info(f"Fetching users with pagination: skip={pagination.skip}, limit={pagination.limit}, search='{pagination.search}'")
   user_repo = UserRepository(session)
   use_case = GetUserUseCase(user_repo)
-  result = use_case.get_all_users(pagination)
+  result = await use_case.get_all_users(pagination)
   logger.info(f"Number of users fetched: {len(result.items)}")
   return result
 
@@ -103,7 +103,7 @@ def get_users(
   "/{user_id}/",
   include_in_schema=False
 )
-def get_user(
+async def get_user(
   request: Request,
   user_id: str,
   session: Session = Depends(get_db),
@@ -111,7 +111,7 @@ def get_user(
   logger.info(f"Fetching user with ID: {user_id}")
   user_repo = UserRepository(session)
   use_case = GetUserUseCase(user_repo)
-  result = use_case.get_by_id(user_id)
+  result = await use_case.get_by_id(user_id)
 
   if result is None:
     logger.warning(f"User with ID '{user_id}' not found.")
@@ -138,7 +138,7 @@ def get_user(
   "/by-username/{username}/",
   include_in_schema=False
 )
-def get_user_by_username(
+async def get_user_by_username(
   request: Request,
   username: str,
   session: Session = Depends(get_db),
@@ -146,7 +146,7 @@ def get_user_by_username(
   logger.info(f"Fetching user with username: {username}")
   user_repo = UserRepository(session)
   use_case = GetUserUseCase(user_repo)
-  result = use_case.get_by_username(username)
+  result = await use_case.get_by_username(username)
   if result is None:
     logger.warning(f"User with username '{username}' not found.")
     return JSONResponse(
@@ -172,7 +172,7 @@ def get_user_by_username(
   "/{user_id}/",
   include_in_schema=False
 ) 
-def update_user(
+async def update_user(
   request: Request,
   user_id: str,
   user_data: UpdateUserDTO,
@@ -182,7 +182,7 @@ def update_user(
   logger.info(f"Updating user with ID: {user_id}")
   unit_of_work = get_uow(session)
   use_case = UpdateUserUseCase(unit_of_work)
-  result = use_case.execute(
+  result = await use_case.execute(
     active_user=active_user, 
     user_id=user_id, 
     data=user_data
@@ -206,7 +206,7 @@ def update_user(
   "/change-password/{user_id}/",
   include_in_schema=False
 )
-def change_user_password(
+async def change_user_password(
   request: Request,
   user_id: str,
   pass_data: ChangePasswordDTO,
@@ -220,7 +220,7 @@ def change_user_password(
     unit_of_work=unit_of_work,
     password_hasher=password_hasher
   )
-  result = use_case.execute(
+  result = await use_case.execute(
     active_user=active_user, 
     user_id=user_id, 
     data=pass_data
@@ -241,7 +241,7 @@ def change_user_password(
   "/{user_id}/",
   include_in_schema=False
 )
-def delete_user(
+async def delete_user(
   request: Request,
   user_id: str,
   session: Session = Depends(get_db),
@@ -250,7 +250,7 @@ def delete_user(
   logger.info(f"Deleting user with ID: {user_id}")
   unit_of_work = get_uow(session)
   use_case = DeleteUserUseCase(unit_of_work)
-  use_case.execute(
+  await use_case.execute(
     active_user=active_user, 
     user_id=user_id
   )

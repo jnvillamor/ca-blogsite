@@ -15,10 +15,10 @@ class CreateUserUseCase:
     self.password_hasher = password_hasher
     self.id_generator = id_generator
   
-  def execute(self, user_data: CreateUserDTO) -> UserResponseDTO: 
-    with self.uow:
+  async def execute(self, user_data: CreateUserDTO) -> UserResponseDTO: 
+    async with self.uow:
       # Validate if username is already taken
-      existing_user = self.uow.users.get_user_by_username(user_data.username)
+      existing_user = await self.uow.users.get_user_by_username(user_data.username)
       
       if existing_user:
         raise UsernameExistsException(user_data.username)
@@ -43,6 +43,6 @@ class CreateUserUseCase:
       )
 
       # Persist user entity
-      created_user = self.uow.users.create_user(new_user)
+      created_user = await self.uow.users.create_user(new_user)
       return UserResponseDTO.model_validate(created_user.to_dict())
 

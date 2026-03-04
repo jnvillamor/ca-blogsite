@@ -1,8 +1,10 @@
 import pytest
-from datetime import datetime, timezone
-from fastapi.testclient import TestClient
+from datetime import datetime
+
 
 class TestGetUserEndpoint:
+
+  @pytest.mark.asyncio
   @pytest.mark.parametrize(
     "limit, skip, expected_count",
     [
@@ -12,24 +14,28 @@ class TestGetUserEndpoint:
       (1, 2, 1),
     ]
   )
-  def test_get_all_user_success(
+  async def test_get_all_user_success(
     self,
     create_existing_users,
-    client: TestClient,
+    client,
+    api_version,
     limit: int,
     skip: int,
     expected_count: int
   ):
-    response = client.get(f"v1/users/?limit={limit}&skip={skip}")
+    response = await client.get(f"/{api_version}/users/?limit={limit}&skip={skip}")
 
     assert response.status_code == 200
     data = response.json()
+
     assert isinstance(data["items"], list)
     assert len(data["items"]) == expected_count
     assert data["skip"] == skip
     assert data["limit"] == limit
     assert data["total"] == 3
 
+
+  @pytest.mark.asyncio
   @pytest.mark.parametrize(
     "user_id",
     [
@@ -38,44 +44,50 @@ class TestGetUserEndpoint:
       "user3",
     ]
   )
-  def test_get_user_by_id_success(
+  async def test_get_user_by_id_success(
     self,
     existing_users,
     create_existing_users,
-    client: TestClient,
+    client,
+    api_version,
     user_id: str
   ):
-    response = client.get(f"v1/users/{user_id}")
+    response = await client.get(f"/{api_version}/users/{user_id}")
 
     assert response.status_code == 200
     data = response.json()
+
     expected_user = next(user for user in existing_users if user["id"] == user_id)
+
     for key in expected_user:
-      if key == "created_at" or key == "updated_at":
+      if key in ("created_at", "updated_at"):
         actual_raw = data[key]
         actual_dt = datetime.fromisoformat(actual_raw.replace("Z", "+00:00"))
 
-        print("KEY:", key)
-        print("ACTUAL RAW:", actual_raw, type(actual_raw))
-        print("ACTUAL DT:", actual_dt, actual_dt.tzinfo)
-        print("EXPECTED:", expected_user[key], expected_user[key].tzinfo)
+        assert actual_dt == expected_user[key]
 
-        assert actual_dt == expected_user[key] 
       elif key != "password":
         assert data[key] == expected_user[key]
 
-  def test_get_user_by_id_not_found(
+
+  @pytest.mark.asyncio
+  async def test_get_user_by_id_not_found(
     self,
     create_existing_users,
-    client: TestClient
+    client,
+    api_version
   ):
     non_existent_user_id = "nonexistentuser"
-    response = client.get(f"v1/users/{non_existent_user_id}")
+
+    response = await client.get(f"/{api_version}/users/{non_existent_user_id}")
 
     assert response.status_code == 404
     data = response.json()
-    assert data["detail"] == f"User with ID '{non_existent_user_id}' not found." 
-  
+
+    assert data["detail"] == f"User with ID '{non_existent_user_id}' not found."
+
+
+  @pytest.mark.asyncio
   @pytest.mark.parametrize(
     "username",
     [
@@ -84,32 +96,41 @@ class TestGetUserEndpoint:
       "charliebrown",
     ]
   )
-  def test_get_user_by_username_success(
+  async def test_get_user_by_username_success(
     self,
     create_existing_users,
     existing_users,
-    client: TestClient,
+    client,
+    api_version,
     username: str
   ):
-    response = client.get(f"v1/users/by-username/{username}")
+    response = await client.get(f"/{api_version}/users/by-username/{username}")
 
     assert response.status_code == 200
     data = response.json()
+
     expected_user = next(user for user in existing_users if user["username"] == username)
+
     for key in expected_user:
-      if key == "created_at" or key == "updated_at":
+      if key in ("created_at", "updated_at"):
         assert data[key] == expected_user[key].isoformat()
+
       elif key != "password":
         assert data[key] == expected_user[key]
-  
-  def test_get_user_by_username_not_found(
+
+
+  @pytest.mark.asyncio
+  async def test_get_user_by_username_not_found(
     self,
     create_existing_users,
-    client: TestClient
+    client,
+    api_version
   ):
     non_existent_username = "nonexistentusername"
-    response = client.get(f"v1/users/by-username/{non_existent_username}")
+
+    response = await client.get(f"/{api_version}/users/by-username/{non_existent_username}")
 
     assert response.status_code == 404
     data = response.json()
+
     assert data["detail"] == f"User with username '{non_existent_username}' not found."

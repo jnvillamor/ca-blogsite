@@ -1,25 +1,31 @@
-import pytest
-from sqlalchemy.orm import Session
 from app.database.unit_of_work import UnitOfWork
 from app.services import PasswordHasher, UuidGenerator
+
 from src.application.dto import CreateUserDTO
 from src.application.use_cases.users import CreateUserUseCase
 
+import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
+
+
 @pytest.fixture
-def create_user_use_case(db_session: Session) -> CreateUserUseCase:
+def create_user_use_case(db_session: AsyncSession) -> CreateUserUseCase:
   unit_of_work = UnitOfWork(db_session)
   password_hasher = PasswordHasher()
   id_generator = UuidGenerator()
+
   return CreateUserUseCase(
     unit_of_work=unit_of_work,
     password_hasher=password_hasher,
     id_generator=id_generator
   )
 
+
 class TestCreateUserUseCase:
-  def test_create_user_success(
-    self, 
-    db_session: Session, 
+
+  @pytest.mark.asyncio
+  async def test_create_user_success(
+    self,
     create_user_use_case: CreateUserUseCase
   ):
     user_data = CreateUserDTO(
@@ -30,8 +36,8 @@ class TestCreateUserUseCase:
       avatar=None
     )
 
-    created_user = create_user_use_case.execute(user_data)
-    
+    created_user = await create_user_use_case.execute(user_data)
+
     assert created_user.id is not None
     assert created_user.first_name == "Alice"
     assert created_user.last_name == "Smith"
@@ -39,10 +45,11 @@ class TestCreateUserUseCase:
     assert created_user.avatar is None
     assert created_user.created_at is not None
     assert created_user.updated_at is not None
-  
-  def test_create_user_duplicate_username(
-    self, 
-    db_session: Session,
+
+
+  @pytest.mark.asyncio
+  async def test_create_user_duplicate_username(
+    self,
     create_user_use_case: CreateUserUseCase
   ):
     user_data = CreateUserDTO(
@@ -53,31 +60,30 @@ class TestCreateUserUseCase:
       avatar=None
     )
 
-    # Create the first user
-    create_user_use_case.execute(user_data)
+    await create_user_use_case.execute(user_data)
 
-    # Attempt to create a second user with the same username
     with pytest.raises(Exception) as exc_info:
-      create_user_use_case.execute(user_data)
-    
+      await create_user_use_case.execute(user_data)
+
     assert f"The username '{user_data.username}' is already taken" in str(exc_info.value)
-  
+
+
+  @pytest.mark.asyncio
   @pytest.mark.parametrize(
     "password, error_regex",
     [
-        ("", r"Password cannot be empty"),
-        ("short", r"at least 8 characters"),
-        ("NoDigits!", r"at least one digit"),
-        ("nouppercase1!", r"at least one uppercase"),
-        ("NOLOWERCASE1!", r"at least one lowercase"),
-        ("NoSpecial1", r"at least one special character"),
+      ("", r"Password cannot be empty"),
+      ("short", r"at least 8 characters"),
+      ("NoDigits!", r"at least one digit"),
+      ("nouppercase1!", r"at least one uppercase"),
+      ("NOLOWERCASE1!", r"at least one lowercase"),
+      ("NoSpecial1", r"at least one special character"),
     ]
   )
-  def test_create_user_invalid_password(
-    self, 
-    db_session: Session, 
+  async def test_create_user_invalid_password(
+    self,
     create_user_use_case: CreateUserUseCase,
-    password: str, 
+    password: str,
     error_regex: str
   ):
     user_data = CreateUserDTO(
@@ -88,12 +94,11 @@ class TestCreateUserUseCase:
       avatar=None
     )
 
-    with pytest.raises(Exception, match=error_regex) as exc_info:
-      create_user_use_case.execute(user_data)
-    
-  # ─────────────────────────────
-  # Parameterized test for invalid names
-  # ─────────────────────────────
+    with pytest.raises(Exception, match=error_regex):
+      await create_user_use_case.execute(user_data)
+
+
+  @pytest.mark.asyncio
   @pytest.mark.parametrize(
     "field, invalid_value, error_regex",
     [
@@ -110,9 +115,8 @@ class TestCreateUserUseCase:
       ("username", "a" * 21, r"Username cannot exceed \d+ characters"),
     ]
   )
-  def test_create_user_invalid_names(
+  async def test_create_user_invalid_names(
     self,
-    db_session: Session,
     create_user_use_case: CreateUserUseCase,
     field: str,
     invalid_value: str,
@@ -128,5 +132,5 @@ class TestCreateUserUseCase:
 
     setattr(user_data, field, invalid_value)
 
-    with pytest.raises(Exception, match=error_regex) as exc_info:
-      create_user_use_case.execute(user_data)
+    with pytest.raises(Exception, match=error_regex):
+      await create_user_use_case.execute(user_data)

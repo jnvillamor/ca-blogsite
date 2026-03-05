@@ -13,6 +13,7 @@ pytest
 pytest-mock
 pytest-asyncio
 httpx
+faker
 
 pyjwt
 python-multipart

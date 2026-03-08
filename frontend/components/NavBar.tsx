@@ -14,9 +14,18 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { LogOut, Plus, User } from "lucide-react"
 import { Spinner } from "./ui/spinner"
+import { useState } from "react"
 
 const NavBar = () => {
   const { data: session, status } = useSession()
+  const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false)
+
+  const handleSignOut = async (event: Event) => {
+    event.preventDefault()
+    setIsLoggingOut(true)
+    await signOut({ redirect: false })
+    setIsLoggingOut(false)
+  }
 
   return (
     <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
@@ -82,9 +91,21 @@ const NavBar = () => {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => signOut} className="flex items-center gap-2 text-destructive focus:bg-destructive focus:text-white cursor-pointer">
-                    <LogOut className="h-4 w-4" />
-                    Logout
+                  <DropdownMenuItem
+                    onSelect={handleSignOut}
+                    className="flex items-center gap-2 text-destructive focus:bg-destructive focus:text-white cursor-pointer"
+                  >
+                    {isLoggingOut ? (
+                      <>
+                        <Spinner className="h-5 w-5" />
+                        <span>Logging out...</span>
+                      </>
+                    ) : (
+                      <>
+                        <LogOut className="h-4 w-4" />
+                        <span>Log Out </span>
+                      </>
+                    )}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

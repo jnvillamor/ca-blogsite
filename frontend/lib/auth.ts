@@ -1,4 +1,5 @@
 import { config } from "@/config/config"
+import { AuthException } from "@/config/exceptions"
 import { login, logout, refreshToken } from "@/data-access/auth/auth"
 import { jwtDecode } from "jwt-decode"
 import type {
@@ -55,7 +56,12 @@ export const authConfig = {
             refresh_token: response.refresh_token,
           }
         } catch (error: any) {
-          return null
+          console.error("Login error:", error)
+          throw new Error(
+            error instanceof AuthException
+              ? error.message
+              : "Something went wrong during login",
+          )
         }
       },
     }),
@@ -124,6 +130,9 @@ export const authConfig = {
 
       await logout(token.access_token)
     },
+  },
+  pages: {
+    signIn: "/login",
   },
 } satisfies NextAuthOptions
 

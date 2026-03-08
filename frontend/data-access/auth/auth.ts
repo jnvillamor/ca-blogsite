@@ -1,5 +1,5 @@
-import { config } from "@/app/config/config";
-import { AuthException } from "@/app/config/exceptions";
+import { config } from "@/config/config";
+import { AuthException } from "@/config/exceptions";
 import { AuthResponse } from "../dto/auth";
 
 export const login = async (

@@ -4,7 +4,6 @@ import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 import { Button } from "./ui/button"
 import { Moon, Sun } from "lucide-react"
-import { useSession } from "next-auth/react"
 
 const ThemeToggle = () => {
   const [mounted, setMounted] = useState<boolean>(false)
@@ -23,7 +22,7 @@ const ThemeToggle = () => {
       variant="ghost"
       size="sm"
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="h-10 w-10 p-0 hover:bg-primary/10 transition-color"
+      className="h-10 w-10 p-0 hover:bg-primary/10 transition-colors"
       title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
     >
       {theme === "dark" ? (

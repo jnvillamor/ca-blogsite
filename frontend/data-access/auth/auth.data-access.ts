@@ -1,8 +1,9 @@
 import { config } from "@/config/config";
 import { AuthException } from "@/config/exceptions";
-import { AuthResponse } from "../dto/auth";
+import { AuthResponse, RegisterDTO } from "../dto/auth.dto";
+import { RegisterData } from "../types/auth.types";
 
-export const login = async (
+export const loginUser = async (
   username: string,
   password: string,
 ): Promise<AuthResponse> => {
@@ -78,4 +79,36 @@ export const logout = async (accessToken: string): Promise<void> => {
   }
 
   console.log("Logout successful, response status:", response.status);
+}
+
+export const registerUser = async (
+  data: RegisterData
+): Promise<AuthResponse> => {
+  const payload: RegisterDTO = {
+    first_name: data.first_name,
+    last_name: data.last_name,
+    username: data.username,
+    password: data.password
+  }
+
+  const response = await fetch(
+    `${config.apiEndpoint}/${config.apiVersion}/auth/register/`, 
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    }
+  );
+
+  if (!response.ok) {
+    console.error("Registration failed with status:", response.status);
+    const data = await response.json();
+    throw new AuthException(data.detail || "Registration failed");
+  }
+
+  console.log("Registration successful, response status:", response.status);
+  const result = await response.json();
+  return result as AuthResponse;
 }

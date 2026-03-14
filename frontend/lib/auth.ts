@@ -1,6 +1,6 @@
 import { config } from "@/config/config"
 import { AuthException } from "@/config/exceptions"
-import { login, logout, refreshToken } from "@/data-access/auth/auth"
+import { loginUser, logout, refreshToken } from "@/data-access/auth/auth.data-access"
 import { jwtDecode } from "jwt-decode"
 import type {
   GetServerSidePropsContext,
@@ -42,7 +42,7 @@ export const authConfig = {
         }
 
         try {
-          const response = await login(
+          const response = await loginUser(
             credentials.username,
             credentials.password,
           )

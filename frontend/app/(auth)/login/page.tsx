@@ -1,4 +1,4 @@
-import AuthForm from "./AuthForm"
+import AuthForm from "./_components/AuthForm"
 
 export const metadata = {
   title: 'Log In',
@@ -8,7 +8,7 @@ export const metadata = {
 const LogIn = () => {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md">
         <div className="mb-8 text-center space-y-2">
           <h2 className="text-3xl font-bold text-foreground">Welcome Back</h2>
           <p className="text-muted-foreground">Access your BlogHub account</p>

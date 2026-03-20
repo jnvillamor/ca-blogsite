@@ -1,6 +1,6 @@
 import React from "react"
-import { useFormContext } from "."
 import { Button } from "../ui/button"
+import { useFormContext } from "@/hooks/form"
 
 type SubscribeButtonProps = {
   label: {
@@ -9,16 +9,16 @@ type SubscribeButtonProps = {
   }
 } & React.ButtonHTMLAttributes<HTMLButtonElement>
 
-const SubscribeButton = ({ label, ...props }: SubscribeButtonProps) => {
+const SubmitButton = ({ label, ...props }: SubscribeButtonProps) => {
   const { Subscribe } = useFormContext()
 
   return (
-    <Subscribe selector={(state) => [state.isSubmitting]}>
-      {([isSubmitting]) => (
+    <Subscribe selector={(state) => [state.isSubmitting, state.canSubmit]}>
+      {([isSubmitting, canSubmit]) => (
         <Button
           type="submit"
           className="w-full h-11 cursor-pointer"
-          disabled={isSubmitting}
+          disabled={isSubmitting || !canSubmit}
           {...props}
         >
           {isSubmitting ? label.submitting : label.default}
@@ -28,4 +28,4 @@ const SubscribeButton = ({ label, ...props }: SubscribeButtonProps) => {
   )
 }
 
-export default SubscribeButton
+export default SubmitButton

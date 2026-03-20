@@ -1,6 +1,6 @@
 "use client"
 
-import { useAppForm } from "@/components/custom-form"
+import { useAppForm } from "@/hooks/form"
 import {
   Card,
   CardContent,
@@ -85,7 +85,7 @@ const LoginForm = () => {
           />
 
           <form.AppForm>
-            <form.SubscribeButton
+            <form.SubmitButton
               label={{ default: "Log In", submitting: "Logging In..." }}
             />
           </form.AppForm>

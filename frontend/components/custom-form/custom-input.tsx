@@ -1,4 +1,4 @@
-import { useFieldContext } from "."
+import { useFieldContext } from "../../hooks/form"
 import { Label } from "../ui/label"
 import { Input } from "../ui/input"
 import { Button } from "../ui/button"
@@ -31,7 +31,7 @@ export const InputField = ({
           name={name}
           type={type}
           placeholder={placeholder}
-          value={state.value || ""}
+          value={state.value}
           onChange={(e) => handleChange(e.target.value)}
           onBlur={handleBlur}
           {...props}
@@ -46,7 +46,7 @@ export const InputField = ({
   )
 }
 
-export const SensitiveInputField= ({
+export const SensitiveInputField = ({
   label,
   placeholder,
   ...props
@@ -67,7 +67,7 @@ export const SensitiveInputField= ({
             name={name}
             type={showPassword ? "text" : "password"}
             placeholder={placeholder}
-            value={state.value || ""}
+            value={state.value}
             onChange={(e) => handleChange(e.target.value)}
             onBlur={handleBlur}
             {...props}

@@ -1,9 +1,9 @@
+import SubmitButton from "@/components/custom-form/custom-button"
+import { InputField, SensitiveInputField } from "@/components/custom-form/custom-input"
 import {
   createFormHook,
   createFormHookContexts,
 } from "@tanstack/react-form-nextjs"
-import { InputField, SensitiveInputField,  } from "./custom-input"
-import SubscribeButton from "./custom-button"
 
 export const { fieldContext, useFieldContext, formContext, useFormContext } =
   createFormHookContexts()
@@ -14,7 +14,7 @@ export const { useAppForm } = createFormHook({
     SensitiveInputField,
   },
   formComponents: {
-    SubscribeButton,
+    SubmitButton,
   },
   fieldContext,
   formContext,

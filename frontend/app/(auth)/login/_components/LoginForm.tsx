@@ -13,7 +13,7 @@ import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
-const AuthForm = () => {
+const LoginForm = () => {
   const router = useRouter()
   const form = useAppForm({
     defaultValues: {
@@ -77,7 +77,7 @@ const AuthForm = () => {
           <form.AppField
             name="password"
             children={(field) => (
-              <field.SenstiveInputField
+              <field.SensitiveInputField
                 label="Password"
                 placeholder="********"
               />
@@ -95,4 +95,4 @@ const AuthForm = () => {
   )
 }
 
-export default AuthForm
+export default LoginForm

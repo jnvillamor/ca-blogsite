@@ -1,4 +1,4 @@
-import AuthForm from "./_components/AuthForm"
+import LoginForm from "./_components/LoginForm"
 
 export const metadata = {
   title: 'Log In',
@@ -13,7 +13,7 @@ const LogIn = () => {
           <h2 className="text-3xl font-bold text-foreground">Welcome Back</h2>
           <p className="text-muted-foreground">Access your BlogHub account</p>
         </div>
-        <AuthForm />
+        <LoginForm />
       </div>
     </div>
   )

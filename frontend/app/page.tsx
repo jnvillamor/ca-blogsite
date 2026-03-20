@@ -3,8 +3,8 @@ import Link from "next/link"
 
 export default function Home() {
   return (
-    <main className="min-h-screen relative mx-auto px-4 py-50 sm:px-6 lg:px-8 overflow-hidden">
-      <div className="absolute inset-0 opacity-15">
+    <main className="min-h-screen relative mx-auto px-4 py-60 sm:px-6 lg:px-8 overflow-hidden">
+      <div className="absolute inset-0 opacity-15 -z-10">
         <div className="absolute top-0 right-0 w-100 h-100 bg-primary rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-100 h-100 bg-accent rounded-full blur-3xl"></div>
       </div>
@@ -28,7 +28,7 @@ export default function Home() {
           <Button
             asChild
             size="lg"
-            className="h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-shadow"
+            className="h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
           >
             <Link href="/register">Start Writing</Link>
           </Button>
@@ -36,7 +36,7 @@ export default function Home() {
             asChild
             variant="outline"
             size="lg"
-            className="h-12 text-base font-semibold hover:bg-primary/10"
+            className="h-12 text-base font-semibold hover:bg-primary/10 cursor-pointer"
           >
             <Link href="/blogs">Browse Stories</Link>
           </Button>

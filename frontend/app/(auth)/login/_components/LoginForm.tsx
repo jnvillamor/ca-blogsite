@@ -30,7 +30,7 @@ const LoginForm = () => {
           ...value,
           redirect: false,
         })
-        console.log(response)
+
         if (!response?.ok) {
           toast.error(response?.error || "Login failed")
           return

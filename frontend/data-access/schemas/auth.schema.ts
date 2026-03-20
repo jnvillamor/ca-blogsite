@@ -9,13 +9,21 @@ export type LoginData = z.infer<typeof LoginSchema>
 
 export const RegisterSchema = z
   .object({
-    first_name: z.string().min(1, "First name is required"),
-    last_name: z.string().min(1, "Last name is required"),
+    first_name: z
+      .string()
+      .min(1, "First name is required")
+      .trim()
+      .transform((str) => str.charAt(0).toUpperCase() + str.slice(1)),
+    last_name: z
+      .string()
+      .min(1, "Last name is required")
+      .trim()
+      .transform((str) => str.charAt(0).toUpperCase() + str.slice(1)),
     username: z.string().min(1, "Username is required"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirm_password: z
       .string()
-      .min(8, "Confirm password must be at least 8 characters"),
+      .min(8, "Confirm password must be at least 8 characters")
   })
   .refine((data) => data.password === data.confirm_password, {
     message: "Passwords do not match",
@@ -42,4 +50,4 @@ export const RegisterSchema = z
     path: ["password"],
   })
 
-  export type RegisterData = z.infer<typeof RegisterSchema>
+export type RegisterData = z.infer<typeof RegisterSchema>

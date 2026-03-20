@@ -18,7 +18,7 @@ export const InputField = ({
   ...props
 }: CustomInputFieldProps) => {
   const { name, state, handleChange, handleBlur } = useFieldContext<string>()
-  const { errors, isTouched } = state.meta
+  const { errors, isBlurred } = state.meta
 
   return (
     <div className="space-y-2">
@@ -36,7 +36,7 @@ export const InputField = ({
           onBlur={handleBlur}
           {...props}
         />
-        {isTouched && errors.length > 0 && (
+        {isBlurred && errors.length > 0 && (
           <span className="text-destructive text-sm">
             {errors[0]?.message || `Invalid ${label.toLowerCase()}`}
           </span>
@@ -53,7 +53,7 @@ export const SensitiveInputField = ({
 }: Omit<CustomInputFieldProps, "type">) => {
   const [showPassword, setShowPassword] = useState(false)
   const { name, state, handleChange, handleBlur } = useFieldContext<string>()
-  const { errors, isTouched } = state.meta
+  const { errors, isBlurred } = state.meta
 
   return (
     <div className="space-y-2">
@@ -84,7 +84,7 @@ export const SensitiveInputField = ({
             )}
           </Button>
         </div>
-        {isTouched && errors.length > 0 && (
+        {isBlurred && errors.length > 0 && (
           <span className="text-destructive text-sm">
             {errors[0]?.message || `Invalid ${label.toLowerCase()}`}
           </span>

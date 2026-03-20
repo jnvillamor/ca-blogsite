@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import ThemeToggle from "./ThemeToggle"
+import ThemeToggle from "./theme-toggle"
 import { signOut, useSession } from "next-auth/react"
 import { Button } from "./ui/button"
 import {

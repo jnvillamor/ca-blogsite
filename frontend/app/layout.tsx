@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import "@/styles/globals.css"
 import { ThemeProvider } from "@/components/providers/theme-provider"
-import NavBar from "@/components/NavBar"
+import NavBar from "@/components/navbar"
 import SessionProvider from "@/components/providers/session-provider"
 import { Toaster } from "sonner"
 

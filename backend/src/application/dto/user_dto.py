@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_serializer
+from pydantic import BaseModel, field_serializer, field_validator
 from typing import Optional
 from datetime import datetime, timezone
 
@@ -8,6 +8,16 @@ class CreateUserDTO(BaseModel):
   username: str
   password: str
   avatar: Optional[str] = None
+
+  @field_validator("first_name", "last_name", mode="before")
+  @classmethod
+  def format_names(cls, value: str) -> str:
+    return value.strip().capitalize()
+
+  @field_validator("username", mode="before")
+  @classmethod
+  def strip_fields(cls, value: str) -> str:
+    return value.strip()
 
 class UpdateUserDTO(BaseModel):
   first_name: Optional[str] = None

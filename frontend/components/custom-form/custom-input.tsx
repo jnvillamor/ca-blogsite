@@ -46,7 +46,7 @@ export const InputField = ({
   )
 }
 
-export const SenstiveInputField = ({
+export const SensitiveInputField= ({
   label,
   placeholder,
   ...props

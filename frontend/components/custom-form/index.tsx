@@ -2,7 +2,7 @@ import {
   createFormHook,
   createFormHookContexts,
 } from "@tanstack/react-form-nextjs"
-import { InputField, SenstiveInputField } from "./custom-input"
+import { InputField, SensitiveInputField,  } from "./custom-input"
 import SubscribeButton from "./custom-button"
 
 export const { fieldContext, useFieldContext, formContext, useFormContext } =
@@ -11,7 +11,7 @@ export const { fieldContext, useFieldContext, formContext, useFormContext } =
 export const { useAppForm } = createFormHook({
   fieldComponents: {
     InputField,
-    SenstiveInputField,
+    SensitiveInputField,
   },
   formComponents: {
     SubscribeButton,

@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { LoginData, LoginSchema } from "@/data-access/types/auth.types"
+import { LoginData, LoginSchema } from "@/data-access/schemas/auth.schema"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -26,18 +26,20 @@ const LoginForm = () => {
     },
     onSubmit: async ({ value }: { value: LoginData }) => {
       try {
-        const response = await signIn("credentials", {
-          ...value,
-          redirect: false,
-        })
+        value = LoginSchema.parse(value)
+        console.log(value)
+        // const response = await signIn("credentials", {
+        //   ...value,
+        //   redirect: false,
+        // })
 
-        if (!response?.ok) {
-          toast.error(response?.error || "Login failed")
-          return
-        }
+        // if (!response?.ok) {
+        //   toast.error(response?.error || "Login failed")
+        //   return
+        // }
 
-        toast.success("Logged in successfully")
-        router.push("/")
+        // toast.success("Logged in successfully")
+        // router.push("/")
       } catch (error) {
         console.error("Login failed:", error)
         toast.error(

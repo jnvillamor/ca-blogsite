@@ -1,7 +1,7 @@
 import { config } from "@/config/config";
 import { AuthException } from "@/config/exceptions";
 import { AuthResponse, RegisterDTO } from "../dto/auth.dto";
-import { RegisterData } from "../types/auth.types";
+import { RegisterData } from "../schemas/auth.schema";
 
 export const loginUser = async (
   username: string,

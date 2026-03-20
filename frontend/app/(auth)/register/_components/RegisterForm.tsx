@@ -10,8 +10,7 @@ import {
 } from "@/components/ui/card"
 import { AuthException } from "@/config/exceptions"
 import { registerUser } from "@/data-access/auth/auth.data-access"
-import { RegisterData, RegisterSchema } from "@/data-access/types/auth.types"
-import { signIn } from "next-auth/react"
+import { RegisterData, RegisterSchema } from "@/data-access/schemas/auth.schema"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
@@ -31,6 +30,7 @@ const RegisterForm = () => {
     },
     onSubmit: async ({ value }: { value: RegisterData }) => {
       try {
+        value = RegisterSchema.parse(value)
         await registerUser({
           first_name: value.first_name,
           last_name: value.last_name,
@@ -43,6 +43,7 @@ const RegisterForm = () => {
         router.push("/")
       } catch (error) {
         console.error("Registration failed:", error)
+        console.log(error instanceof AuthException)
         toast.error(
           error instanceof AuthException 
             ? error.message

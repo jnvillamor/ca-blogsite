@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/providers/theme-provider"
 import NavBar from "@/components/navbar"
 import SessionProvider from "@/components/providers/session-provider"
 import { Toaster } from "sonner"
+import PageTransitionContainer from "@/components/page-transition"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,7 +38,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <NavBar />
-            {children}
+            <PageTransitionContainer>{children}</PageTransitionContainer>
             <Toaster richColors position="top-center" />
           </ThemeProvider>
         </SessionProvider>

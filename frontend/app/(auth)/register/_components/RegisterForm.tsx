@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { AuthException } from "@/config/exceptions"
 import { registerUser } from "@/data-access/auth/auth.data-access"
 import { RegisterData, RegisterSchema } from "@/data-access/types/auth.types"
 import { signIn } from "next-auth/react"
@@ -43,7 +44,7 @@ const RegisterForm = () => {
       } catch (error) {
         console.error("Registration failed:", error)
         toast.error(
-          error instanceof Error
+          error instanceof AuthException 
             ? error.message
             : "An unexpected error occurred",
         )

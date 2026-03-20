@@ -85,7 +85,7 @@ export const registerUser = async (
   }
 
   const response = await fetch(
-    `${config.apiEndpoint}/${config.apiVersion}/auth/register/`, 
+    `${config.apiEndpoint}/${config.apiVersion}/users/register`, 
     {
       method: "POST",
       headers: {

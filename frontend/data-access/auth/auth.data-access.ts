@@ -13,7 +13,6 @@ export const loginUser = async (
     grant_type: "password",
   });
 
-  console.log("Login payload:", payload.toString());
   const res = await fetch(
     `${config.apiEndpoint}/${config.apiVersion}/auth/login`,
     {
@@ -27,17 +26,14 @@ export const loginUser = async (
 
   if (!res.ok) {
     const data = await res.json();
-    console.error("Login failed with message:", data.detail || "Unknown error");
     throw new AuthException(data.detail || "Login failed");
   }
 
-  console.log("Login successful, response status:", res.status);
   const data = await res.json();
   return data as AuthResponse;
 };
 
 export const refreshToken = async (refreshToken: string): Promise<AuthResponse> => {
-  console.log("Refreshing token...");
   const response = await fetch(
     `${config.apiEndpoint}/${config.apiVersion}/auth/refresh/`,
     {
@@ -55,7 +51,6 @@ export const refreshToken = async (refreshToken: string): Promise<AuthResponse> 
     throw new AuthException(data.detail || "Token refresh failed");
   }
 
-  console.log("Token refresh successful, response status:", response.status);
   const data = await response.json();
   return data as AuthResponse;
 }
@@ -77,8 +72,6 @@ export const logout = async (accessToken: string): Promise<void> => {
     const data = await response.json();
     throw new AuthException(data.detail || "Logout failed");
   }
-
-  console.log("Logout successful, response status:", response.status);
 }
 
 export const registerUser = async (
@@ -103,12 +96,10 @@ export const registerUser = async (
   );
 
   if (!response.ok) {
-    console.error("Registration failed with status:", response.status);
     const data = await response.json();
     throw new AuthException(data.detail || "Registration failed");
   }
 
-  console.log("Registration successful, response status:", response.status);
   const result = await response.json();
   return result as AuthResponse;
 }

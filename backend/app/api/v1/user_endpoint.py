@@ -1,7 +1,7 @@
 import logging
 from fastapi import APIRouter, Request, Depends, status
 from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession 
 
 from app.api.dependencies import get_current_user
 from app.database.db import get_db
@@ -51,7 +51,7 @@ router = APIRouter(
 async def register_user(
   request: Request,
   user_data: CreateUserDTO,
-  session: Session = Depends(get_db)
+  session: AsyncSession = Depends(get_db)
 ):
   logger.info(f"Registering user with username: {user_data.username}")
   password_hasher = PasswordHasher()
@@ -79,7 +79,7 @@ async def register_user(
 async def get_users(
   request: Request,
   pagination: PaginationDTO = Depends(),
-  session: Session = Depends(get_db),
+  session: AsyncSession = Depends(get_db),
 ):
   logger.info(f"Fetching users with pagination: skip={pagination.skip}, limit={pagination.limit}, search='{pagination.search}'")
   user_repo = UserRepository(session)
@@ -106,7 +106,7 @@ async def get_users(
 async def get_user(
   request: Request,
   user_id: str,
-  session: Session = Depends(get_db),
+  session: AsyncSession = Depends(get_db),
 ):
   logger.info(f"Fetching user with ID: {user_id}")
   user_repo = UserRepository(session)
@@ -141,7 +141,7 @@ async def get_user(
 async def get_user_by_username(
   request: Request,
   username: str,
-  session: Session = Depends(get_db),
+  session: AsyncSession = Depends(get_db),
 ):
   logger.info(f"Fetching user with username: {username}")
   user_repo = UserRepository(session)
@@ -176,7 +176,7 @@ async def update_user(
   request: Request,
   user_id: str,
   user_data: UpdateUserDTO,
-  session: Session = Depends(get_db),
+  session: AsyncSession = Depends(get_db),
   active_user: UserEntity = Depends(get_current_user)
 ):
   logger.info(f"Updating user with ID: {user_id}")
@@ -210,7 +210,7 @@ async def change_user_password(
   request: Request,
   user_id: str,
   pass_data: ChangePasswordDTO,
-  session: Session = Depends(get_db),
+  session: AsyncSession = Depends(get_db),
   active_user: UserEntity = Depends(get_current_user)
 ):
   logger.info(f"Changing password for user with ID: {user_id}")
@@ -244,7 +244,7 @@ async def change_user_password(
 async def delete_user(
   request: Request,
   user_id: str,
-  session: Session = Depends(get_db),
+  session: AsyncSession = Depends(get_db),
   active_user: UserEntity = Depends(get_current_user)
 ):
   logger.info(f"Deleting user with ID: {user_id}")

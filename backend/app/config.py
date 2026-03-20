@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import List
 
 class Configurations(BaseSettings):
   APP_NAME: str = "Clean Architecture Blogsite"
@@ -9,6 +10,7 @@ class Configurations(BaseSettings):
   ALGORITHM: str = "HS256"
   DEFAULT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
   DEFAULT_REFRESH_TOKEN_EXPIRE_DAYS: int = 1
+  ALLOWED_ORIGINS: List[str] = []
   
   model_config = SettingsConfigDict(
     env_file=".env",

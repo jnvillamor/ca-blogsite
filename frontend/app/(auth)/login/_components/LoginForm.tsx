@@ -12,6 +12,7 @@ import { LoginData, LoginSchema } from "@/data-access/schemas/auth.schema"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { Label } from "@/components/ui/label"
 
 const LoginForm = () => {
   const router = useRouter()
@@ -68,22 +69,39 @@ const LoginForm = () => {
           }}
           className="space-y-4"
         >
-          <form.AppField
-            name="username"
-            children={(field) => (
-              <field.InputField label="Username" type="text" />
-            )}
-          />
+          <div className="space-y-2">
+            <Label
+              htmlFor="username"
+              className="text-sm font-medium text-foreground"
+            >
+              Username
+            </Label>
 
-          <form.AppField
-            name="password"
-            children={(field) => (
-              <field.SensitiveInputField
-                label="Password"
-                placeholder="********"
-              />
-            )}
-          />
+            <form.AppField
+              name="username"
+              children={(field) => (
+                <field.InputField
+                  type="text"
+                  placeholder="Enter your username"
+                />
+              )}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label
+              htmlFor="password"
+              className="text-sm font-medium text-foreground"
+            >
+              Password
+            </Label>
+            <form.AppField
+              name="password"
+              children={(field) => (
+                <field.SensitiveInputField placeholder="********" />
+              )}
+            />
+          </div>
 
           <form.AppForm>
             <form.SubmitButton

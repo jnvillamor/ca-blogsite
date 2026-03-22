@@ -13,6 +13,7 @@ import { registerUser } from "@/data-access/auth/auth.data-access"
 import { RegisterData, RegisterSchema } from "@/data-access/schemas/auth.schema"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { Label } from "@/components/ui/label"
 
 const RegisterForm = () => {
   const router = useRouter()
@@ -45,7 +46,7 @@ const RegisterForm = () => {
         console.error("Registration failed:", error)
         console.log(error instanceof AuthException)
         toast.error(
-          error instanceof AuthException 
+          error instanceof AuthException
             ? error.message
             : "An unexpected error occurred",
         )
@@ -71,42 +72,94 @@ const RegisterForm = () => {
           }}
           className="space-y-4"
         >
-          <form.AppField
-            name="first_name"
-            children={(field) => (
-              <field.InputField label="First Name" type="text" />
-            )}
-          />
-          <form.AppField
-            name="last_name"
-            children={(field) => (
-              <field.InputField label="Last Name" type="text" />
-            )}
-          />
-          <form.AppField
-            name="username"
-            children={(field) => (
-              <field.InputField label="Username" type="text" />
-            )}
-          />
-          <form.AppField
-            name="password"
-            children={(field) => (
-              <field.SensitiveInputField
-                label="Password"
-                placeholder="********"
-              />
-            )}
-          />
-          <form.AppField
-            name="confirm_password"
-            children={(field) => (
-              <field.SensitiveInputField
-                label="Confirm Password"
-                placeholder="********"
-              />
-            )}
-          />
+          <div className="space-y-2">
+            <Label
+              htmlFor="first_name"
+              className="text-sm font-medium text-foreground"
+            >
+              First Name
+            </Label>
+            <form.AppField
+              name="first_name"
+              children={(field) => (
+                <field.InputField
+                  type="text"
+                  placeholder="Enter your first name"
+                />
+              )}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label
+              htmlFor="last_name"
+              className="text-sm font-medium text-foreground"
+            >
+              Last Name
+            </Label>
+
+            <form.AppField
+              name="last_name"
+              children={(field) => (
+                <field.InputField
+                  type="text"
+                  placeholder="Enter your last name"
+                />
+              )}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label
+              htmlFor="username"
+              className="text-sm font-medium text-foreground"
+            >
+              Username
+            </Label>
+            <form.AppField
+              name="username"
+              children={(field) => (
+                <field.InputField
+                  type="text"
+                  placeholder="Enter your username"
+                />
+              )}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label
+              htmlFor="password"
+              className="text-sm font-medium text-foreground"
+            >
+              Password
+            </Label>
+
+            <form.AppField
+              name="password"
+              children={(field) => (
+                <field.SensitiveInputField placeholder="********" />
+              )}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label
+              htmlFor="confirm_password"
+              className="text-sm font-medium text-foreground"
+            >
+              Confirm Password
+            </Label>
+
+            <form.AppField
+              name="confirm_password"
+              children={(field) => (
+                <field.SensitiveInputField
+                  placeholder="********"
+                />
+              )}
+            />
+          </div>
 
           <form.AppForm>
             <form.SubmitButton

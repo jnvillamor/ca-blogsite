@@ -26,20 +26,19 @@ const LoginForm = () => {
     },
     onSubmit: async ({ value }: { value: LoginData }) => {
       try {
-        value = LoginSchema.parse(value)
-        console.log(value)
-        // const response = await signIn("credentials", {
-        //   ...value,
-        //   redirect: false,
-        // })
+        const credentials = LoginSchema.parse(value)
+        const response = await signIn("credentials", {
+          ...credentials,
+          redirect: false,
+        })
 
-        // if (!response?.ok) {
-        //   toast.error(response?.error || "Login failed")
-        //   return
-        // }
+        if (!response?.ok) {
+          toast.error(response?.error || "Login failed")
+          return
+        }
 
-        // toast.success("Logged in successfully")
-        // router.push("/")
+        toast.success("Logged in successfully")
+        router.push("/")
       } catch (error) {
         console.error("Login failed:", error)
         toast.error(

@@ -1,15 +1,25 @@
 import React from "react"
-import { Button } from "../ui/button"
+import { Button, buttonVariants } from "../ui/button"
 import { useFormContext } from "@/hooks/form"
+import { cn } from "@/lib/utils"
+import { VariantProps } from "class-variance-authority"
 
 type SubscribeButtonProps = {
+  className?: string
+  variant?: string
   label: {
     default: string
     submitting: string
   }
-} & React.ButtonHTMLAttributes<HTMLButtonElement>
+} & React.ButtonHTMLAttributes<HTMLButtonElement> &
+  VariantProps<typeof buttonVariants>
 
-const SubmitButton = ({ label, ...props }: SubscribeButtonProps) => {
+const SubmitButton = ({
+  label,
+  className,
+  variant = "default",
+  ...props
+}: SubscribeButtonProps) => {
   const { Subscribe } = useFormContext()
 
   return (
@@ -17,8 +27,9 @@ const SubmitButton = ({ label, ...props }: SubscribeButtonProps) => {
       {([isSubmitting, canSubmit]) => (
         <Button
           type="submit"
-          className="w-full h-11 cursor-pointer"
+          className={cn("w-full cursor-pointer", className)}
           disabled={isSubmitting || !canSubmit}
+          variant={variant}
           {...props}
         >
           {isSubmitting ? label.submitting : label.default}

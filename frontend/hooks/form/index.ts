@@ -1,5 +1,7 @@
 import SubmitButton from "@/components/custom-form/custom-button"
 import { InputField, SensitiveInputField } from "@/components/custom-form/custom-input"
+import RichTextEditor from "@/components/custom-form/custom-rich-editor"
+import CustomTextArea from "@/components/custom-form/custom-text-area"
 import {
   createFormHook,
   createFormHookContexts,
@@ -12,6 +14,8 @@ export const { useAppForm } = createFormHook({
   fieldComponents: {
     InputField,
     SensitiveInputField,
+    CustomTextArea,
+    RichTextEditor,
   },
   formComponents: {
     SubmitButton,

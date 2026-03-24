@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
-import CreateBlogForm from "../_components/CreateBlogForm"
+import CreateBlogForm from "../_components/create-blog-form"
 
 const CreateBlog = () => {
   return (

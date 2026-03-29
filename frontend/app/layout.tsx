@@ -39,7 +39,7 @@ export default function RootLayout({
           >
             <NavBar />
             <PageTransitionContainer>{children}</PageTransitionContainer>
-            <Toaster richColors position="top-center" />
+            <Toaster richColors position="bottom-right" />
           </ThemeProvider>
         </SessionProvider>
       </body>

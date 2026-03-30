@@ -25,7 +25,7 @@ class TestGetBlogUseCase:
     return BlogEntity(
       id="blog-123",
       title="Test Blog",
-      content="This is a test blog content.",
+      content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "This is a test blog content.", "styles": {}}], "children": []}],
       author_id="author-123",
       created_at=datetime(2024, 1, 1, tzinfo=timezone.utc),
       updated_at=datetime(2024, 1, 1, tzinfo=timezone.utc)
@@ -37,7 +37,7 @@ class TestGetBlogUseCase:
       BlogEntity(
         id="blog-123",
         title="Test Blog 1",
-        content="This is the first test blog content.",
+        content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "This is the first test blog content.", "styles": {}}], "children": []}],
         author_id="author-123",
         created_at=datetime(2024, 1, 1, tzinfo=timezone.utc),
         updated_at=datetime(2024, 1, 1, tzinfo=timezone.utc)
@@ -45,7 +45,7 @@ class TestGetBlogUseCase:
       BlogEntity(
         id="blog-124",
         title="Test Blog 2",
-        content="This is the second test blog content.",
+        content=[{"id": "2", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "This is the second test blog content.", "styles": {}}], "children": []}],
         author_id="author-124",
         created_at=datetime(2024, 1, 2, tzinfo=timezone.utc),
         updated_at=datetime(2024, 1, 2, tzinfo=timezone.utc)

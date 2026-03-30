@@ -31,9 +31,10 @@ class TestUpdateBlogUseCase:
     test_blog = await create_test_blog(author_id=author_id)
     blog_id = test_blog.id
 
+    updated_content = [{"id": "2", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "This is the updated content of the test blog.", "styles": {}}], "children": []}]
     update_dto = UpdateBlogDTO(
       title="Updated Blog Title",
-      content="This is the updated content of the test blog.",
+      content=updated_content,
       hero_image="https://example.com/updated-hero-image.png"
     )
 
@@ -44,7 +45,7 @@ class TestUpdateBlogUseCase:
     )
 
     assert updated_blog.title == "Updated Blog Title"
-    assert updated_blog.content == "This is the updated content of the test blog."
+    assert updated_blog.content == updated_content
     assert updated_blog.hero_image == "https://example.com/updated-hero-image.png"
 
 
@@ -56,7 +57,7 @@ class TestUpdateBlogUseCase:
   ):
     update_dto = UpdateBlogDTO(
       title="Non-Existent Blog",
-      content="This blog does not exist.",
+      content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "This blog does not exist.", "styles": {}}], "children": []}],
       hero_image="https://example.com/non-existent-hero-image.png"
     )
 
@@ -78,7 +79,7 @@ class TestUpdateBlogUseCase:
     [
       ("title", "", r"Title cannot be empty"),
       ("title", "A" * 101, r"Title cannot exceed \d+ characters"),
-      ("content", "", r"Content cannot be empty"),
+      ("content", [], r"Content cannot be empty"),
     ]
   )
   async def test_update_blog_validation_errors(
@@ -87,7 +88,7 @@ class TestUpdateBlogUseCase:
     create_test_user: Callable[..., Awaitable[UserModel]],
     create_test_blog: Callable[..., Awaitable[BlogModel]],
     field: str,
-    invalid_value: str,
+    invalid_value,
     error_regex: str
   ):
     test_user = await create_test_user()
@@ -98,7 +99,7 @@ class TestUpdateBlogUseCase:
 
     update_data = {
       "title": "Valid Title",
-      "content": "Valid content for the blog.",
+      "content": [{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Valid content for the blog.", "styles": {}}], "children": []}],
       "hero_image": "https://example.com/valid-hero-image.png"
     }
 
@@ -133,7 +134,7 @@ class TestUpdateBlogUseCase:
 
     update_dto = UpdateBlogDTO(
       title="Updated Title",
-      content="Updated content.",
+      content=[{"id": "2", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Updated content.", "styles": {}}], "children": []}],
       hero_image="https://example.com/updated-hero-image.png"
     )
 

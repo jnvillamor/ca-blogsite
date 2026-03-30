@@ -10,9 +10,9 @@ class TestUpdateBlogEndpoint:
     [
       (None, None, None),
       ("Updated Title", None, None),
-      (None, "Updated content.", None),
+      (None, [{"id": "2", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Updated content.", "styles": {}}], "children": []}], None),
       (None, None, "http://example.com/updated_hero.jpg"),
-      ("Updated Title", "Updated content.", "http://example.com/updated_hero.jpg"),
+      ("Updated Title", [{"id": "2", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Updated content.", "styles": {}}], "children": []}], "http://example.com/updated_hero.jpg"),
     ]
   )
   async def test_update_blog_success(
@@ -62,7 +62,7 @@ class TestUpdateBlogEndpoint:
   ):
     payload = {
       "title": "Updated Title",
-      "content": "Updated content.",
+      "content": [{"id": "2", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Updated content.", "styles": {}}], "children": []}],
       "hero_image": "http://example.com/updated_hero.jpg"
     }
 
@@ -100,7 +100,7 @@ class TestUpdateBlogEndpoint:
 
     payload = {
       "title": title,
-      "content": "Valid content for testing.",
+      "content": [{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Valid content for testing.", "styles": {}}], "children": []}],
       "hero_image": "http://example.com/valid_hero.jpg"
     }
 
@@ -116,27 +116,18 @@ class TestUpdateBlogEndpoint:
 
 
   @pytest.mark.asyncio
-  @pytest.mark.parametrize(
-    "content, error_regex",
-    [
-      ("", r"Content cannot be empty."),
-      (" " * 10, r"Content cannot be empty.")
-    ]
-  )
-  async def test_update_blog_invalid_content(
+  async def test_update_blog_invalid_content_empty_list(
     self,
     authenticated_client,
     api_version,
     existing_blogs,
     create_existing_blogs,
-    content,
-    error_regex
   ):
     existing_blog = existing_blogs[0]
 
     payload = {
       "title": "Valid Title",
-      "content": content,
+      "content": [],
       "hero_image": "http://example.com/valid_hero.jpg"
     }
 
@@ -148,7 +139,7 @@ class TestUpdateBlogEndpoint:
     assert response.status_code == 400
     data = response.json()
 
-    assert re.search(error_regex, data["detail"])
+    assert re.search(r"Content cannot be empty.", data["detail"])
 
 
   @pytest.mark.asyncio
@@ -163,7 +154,7 @@ class TestUpdateBlogEndpoint:
 
     payload = {
       "title": "Updated Title",
-      "content": "Updated content.",
+      "content": [{"id": "2", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Updated content.", "styles": {}}], "children": []}],
       "hero_image": "http://example.com/updated_hero.jpg"
     }
 

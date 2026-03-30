@@ -33,9 +33,10 @@ class TestCreateBlogUseCase:
     test_user = await create_test_user()
     author_id = test_user.id
 
+    content_blocks = [{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "This is the content of my first blog.", "styles": {}}], "children": []}]
     blog_data = CreateBlogDTO(
       title="My First Blog",
-      content="This is the content of my first blog.",
+      content=content_blocks,
       author_id=author_id
     )
 
@@ -43,7 +44,7 @@ class TestCreateBlogUseCase:
 
     assert created_blog.id is not None
     assert created_blog.title == "My First Blog"
-    assert created_blog.content == "This is the content of my first blog."
+    assert created_blog.content == content_blocks
     assert created_blog.author_id == author_id
     assert created_blog.created_at is not None
     assert created_blog.updated_at is not None
@@ -57,7 +58,7 @@ class TestCreateBlogUseCase:
   ):
     blog_data = CreateBlogDTO(
       title="Invalid Author Blog",
-      content="This blog has an invalid author.",
+      content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "This blog has an invalid author.", "styles": {}}], "children": []}],
       author_id="non-existent-author-id"
     )
 
@@ -91,7 +92,7 @@ class TestCreateBlogUseCase:
 
     blog_data = CreateBlogDTO(
       title=title,
-      content="Valid content for testing invalid title.",
+      content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Valid content for testing invalid title.", "styles": {}}], "children": []}],
       author_id=author_id
     )
 
@@ -103,32 +104,23 @@ class TestCreateBlogUseCase:
 
 
   @pytest.mark.asyncio
-  @pytest.mark.parametrize(
-    "content, error_regex",
-    [
-      ("", r"Content cannot be empty."),
-      (" " * 10, r"Content cannot be empty.")
-    ]
-  )
-  async def test_create_blog_invalid_content(
+  async def test_create_blog_invalid_content_empty_list(
     self,
     db_session: AsyncSession,
     create_test_user,
     create_blog_use_case: CreateBlogUseCase,
-    content,
-    error_regex
   ):
     test_user = await create_test_user()
     author_id = test_user.id
 
     blog_data = CreateBlogDTO(
       title="Valid Title for Testing Invalid Content",
-      content=content,
+      content=[],
       author_id=author_id
     )
 
-    with pytest.raises(Exception, match=error_regex) as exc_info:
+    with pytest.raises(Exception, match=r"Content cannot be empty.") as exc_info:
       await create_blog_use_case.execute(blog_data)
 
     assert isinstance(exc_info.value, Exception)
-    assert re.search(error_regex, str(exc_info.value)) is not None
+    assert re.search(r"Content cannot be empty.", str(exc_info.value)) is not None

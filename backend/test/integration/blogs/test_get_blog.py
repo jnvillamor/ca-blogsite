@@ -72,7 +72,7 @@ class TestGetBlogUseCase:
       await create_test_blog(
         id=f"test-blog-id-{i}",
         title=f"Test Blog Title {i}",
-        content=f"This is the content of test blog {i}.",
+        content=[{"id": str(i), "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": f"This is the content of test blog {i}.", "styles": {}}], "children": []}],
         author_id=test_user.id,
         hero_image=f"https://example.com/hero-image-{i}.png"
       )
@@ -102,7 +102,7 @@ class TestGetBlogUseCase:
         await create_test_blog(
           id=f"test-blog-id-{i}-{j}",
           title=f"Test Blog Title {i}-{j}",
-          content=f"This is the content of test blog {i}-{j}.",
+          content=[{"id": f"{i}-{j}", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": f"This is the content of test blog {i}-{j}.", "styles": {}}], "children": []}],
           author_id=test_user.id,
           hero_image=f"https://example.com/hero-image-{i}-{j}.png"
         )

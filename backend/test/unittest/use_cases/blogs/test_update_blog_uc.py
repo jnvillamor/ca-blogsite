@@ -34,7 +34,7 @@ def blog_data():
   return BlogEntity(
     id="blog-123",
     title="Original Title",
-    content="Original content.",
+    content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Original content.", "styles": {}}], "children": []}],
     author_id="author-123",
     hero_image="http://example.com/original_hero.jpg",
     created_at=datetime(2024, 1, 1, tzinfo=timezone.utc),
@@ -64,9 +64,9 @@ class TestUpdateBlogUseCase:
     [
       (None, None, None),
       ("Updated Title", None, None),
-      (None, "Updated content.", None),
+      (None, [{"id": "2", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Updated content.", "styles": {}}], "children": []}], None),
       (None, None, "http://example.com/updated_hero.jpg"),
-      ("Updated Title", "Updated content.", "http://example.com/updated_hero.jpg"),
+      ("Updated Title", [{"id": "2", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Updated content.", "styles": {}}], "children": []}], "http://example.com/updated_hero.jpg"),
     ]
   )
   async def test_update_blog_success(

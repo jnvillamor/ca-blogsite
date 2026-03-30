@@ -8,7 +8,7 @@ async def existing_blogs(existing_users, create_existing_users):
     {
       "id": f"blog-{i+1}",
       "title": f"Test Blog {i+1}",
-      "content": f"This is the content of test blog {i+1}.",
+      "content": [{"id": str(i+1), "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": f"This is the content of test blog {i+1}.", "styles": {}}], "children": []}],
       "author_id": existing_users[i % len(existing_users)]["id"],
       "hero_image": f"http://example.com/hero{i+1}.jpg",
       "created_at": datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc),

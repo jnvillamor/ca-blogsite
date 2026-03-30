@@ -80,7 +80,9 @@ class TestGetBlogEndpoint:
 
     assert data["id"] == blog_id
     assert data["title"] == f"Test Blog {blog_id.split('-')[1]}"
-    assert data["content"] == f"This is the content of test blog {blog_id.split('-')[1]}."
+    blog_num = blog_id.split('-')[1]
+    expected_content = [{"id": blog_num, "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": f"This is the content of test blog {blog_num}.", "styles": {}}], "children": []}]
+    assert data["content"] == expected_content
     assert data["author_id"] is not None
 
 

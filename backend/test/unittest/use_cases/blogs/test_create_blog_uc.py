@@ -41,7 +41,7 @@ def create_blog_use_case(unit_of_work, id_generator):
 def blog_data():
   return CreateBlogDTO(
     title="Test Blog",
-    content="This is a test blog content.",
+    content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "This is a test blog content.", "styles": {}}], "children": []}],
     author_id="author-123",
     hero_image="http://example.com/hero.jpg"
   )
@@ -140,27 +140,18 @@ class TestCreateBlogUseCase:
 
 
   @pytest.mark.asyncio
-  @pytest.mark.parametrize(
-    "content, error_regex",
-    [
-      ("", r"Content cannot be empty."),
-      (" " * 10, r"Content cannot be empty.")
-    ]
-  )
-  async def test_execute_invalid_content(
+  async def test_execute_invalid_content_empty_list(
     self,
     create_blog_use_case,
     blog_data,
     unit_of_work,
     existing_user,
-    content,
-    error_regex
   ):
-    blog_data.content = content
+    blog_data.content = []
 
     unit_of_work.users.get_user_by_id.return_value = existing_user
 
-    with pytest.raises(InvalidDataException, match=error_regex):
+    with pytest.raises(InvalidDataException, match=r"Content cannot be empty."):
       await create_blog_use_case.execute(blog_data)
 
     unit_of_work.users.get_user_by_id.assert_awaited_once_with(blog_data.author_id)

@@ -37,10 +37,13 @@ def create_test_blog(db_session: AsyncSession) -> Callable[..., Awaitable[BlogMo
   async def _create_test_blog(
     id: str = "test-blog-id",
     title: str = "Test Blog Title",
-    content: str = "This is the content of the test blog.",
+    content: list = None,
     author_id: str = "test-user-id",
     hero_image: str = "https://example.com/hero-image.png",
   ) -> BlogModel:
+
+    if content is None:
+      content = [{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "This is the content of the test blog.", "styles": {}}], "children": []}]
 
     test_blog = BlogModel(
       id=id,

@@ -12,7 +12,7 @@ class TestCreateBlogEndpoint:
   ):
     payload = {
       "title": "My First Blog",
-      "content": "This is the content of my first blog.",
+      "content": [{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "This is the content of my first blog.", "styles": {}}], "children": []}],
       "author_id": existing_users[0]["id"]
     }
     response = await client.post(f"/{api_version}/blogs/", json=payload)
@@ -28,7 +28,7 @@ class TestCreateBlogEndpoint:
   async def test_create_blog_user_not_found(self, api_version, client: AsyncClient):
     payload = {
       "title": "Blog with Invalid Author",
-      "content": "This blog has an invalid author_id.",
+      "content": [{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "This blog has an invalid author_id.", "styles": {}}], "children": []}],
       "author_id": "nonexistent-user-id"
     }
     response = await client.post(f"/{api_version}/blogs/", json=payload)
@@ -57,7 +57,7 @@ class TestCreateBlogEndpoint:
   ):
     payload = {
       "title": title,
-      "content": "Valid content for testing.",
+      "content": [{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Valid content for testing.", "styles": {}}], "children": []}],
       "author_id": existing_users[0]["id"]
     }
     response = await client.post(f"/{api_version}/blogs/", json=payload)
@@ -66,29 +66,20 @@ class TestCreateBlogEndpoint:
     data = response.json()
     assert re.search(error_regex, data["detail"])
   
-  @pytest.mark.parametrize(
-    "content, error_regex",
-    [
-      ("", r"Content cannot be empty."),
-      (" " * 10, r"Content cannot be empty.")
-    ]
-  )
-  async def test_invalid_content(
+  async def test_invalid_content_empty_list(
     self,
     api_version,
     existing_users,
     create_existing_users,
     client: AsyncClient,
-    content,
-    error_regex
   ):
     payload = {
       "title": "Valid Title",
-      "content": content,
+      "content": [],
       "author_id": existing_users[0]["id"]
     }
     response = await client.post(f"/{api_version}/blogs/", json=payload)
 
     assert response.status_code == 400
     data = response.json()
-    assert re.search(error_regex, data["detail"])
+    assert re.search(r"Content cannot be empty.", data["detail"])

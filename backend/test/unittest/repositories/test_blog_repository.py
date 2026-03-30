@@ -17,7 +17,7 @@ class TestBlogRepository:
     blog = BlogEntity(
       id="blog123",
       title="Test Blog",
-      content="This is a test blog.",
+      content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "This is a test blog.", "styles": {}}], "children": []}],
       author_id="user123",
       created_at=datetime(2024,1,1,tzinfo=timezone.utc),
       updated_at=datetime(2024,1,1,tzinfo=timezone.utc)
@@ -44,7 +44,7 @@ class TestBlogRepository:
       blog = BlogEntity(
         id=f"blog{i}",
         title=f"Blog {i}",
-        content="Content",
+        content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Content", "styles": {}}], "children": []}],
         author_id="user123",
         created_at=datetime(2024,1,1,tzinfo=timezone.utc),
         updated_at=datetime(2024,1,1,tzinfo=timezone.utc)
@@ -87,7 +87,7 @@ class TestBlogRepository:
       blog = BlogEntity(
         id=f"blog{i}",
         title=f"Blog {i}",
-        content="Content",
+        content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Content", "styles": {}}], "children": []}],
         author_id="user123" if i < 5 else "user456",
         created_at=datetime(2024,1,1,tzinfo=timezone.utc),
         updated_at=datetime(2024,1,1,tzinfo=timezone.utc)
@@ -113,7 +113,7 @@ class TestBlogRepository:
       blog = BlogEntity(
         id=f"blog{i}",
         title=f"Test Blog {i}",
-        content="Content",
+        content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Content", "styles": {}}], "children": []}],
         author_id="user123",
         created_at=datetime(2024,1,1,tzinfo=timezone.utc),
         updated_at=datetime(2024,1,1,tzinfo=timezone.utc)
@@ -137,7 +137,7 @@ class TestBlogRepository:
     blog = BlogEntity(
       id="blog123",
       title="Test Blog",
-      content="This is a test blog.",
+      content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "This is a test blog.", "styles": {}}], "children": []}],
       author_id="user123",
       created_at=datetime(2024,1,1,tzinfo=timezone.utc),
       updated_at=datetime(2024,1,1,tzinfo=timezone.utc)
@@ -148,7 +148,7 @@ class TestBlogRepository:
     updated_blog = BlogEntity(
       id="blog123",
       title="Updated Blog",
-      content="Updated content",
+      content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Updated content", "styles": {}}], "children": []}],
       author_id="user123",
       created_at=blog.created_at,
       updated_at=datetime(2024,1,2,tzinfo=timezone.utc)
@@ -160,7 +160,7 @@ class TestBlogRepository:
 
     assert retrieved is not None
     assert retrieved.title == "Updated Blog"
-    assert retrieved.content == "Updated content"
+    assert retrieved.content == [{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Updated content", "styles": {}}], "children": []}]
 
 
   @pytest.mark.asyncio
@@ -170,7 +170,7 @@ class TestBlogRepository:
     blog = BlogEntity(
       id="blog123",
       title="Test Blog",
-      content="Content",
+      content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Content", "styles": {}}], "children": []}],
       author_id="user123",
       created_at=datetime(2024,1,1,tzinfo=timezone.utc),
       updated_at=datetime(2024,1,1,tzinfo=timezone.utc)
@@ -187,7 +187,7 @@ class TestBlogRepository:
     blog = BlogEntity(
       id="blog123",
       title="Test Blog",
-      content="Content",
+      content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Content", "styles": {}}], "children": []}],
       author_id="user123",
       created_at=datetime(2024,1,1,tzinfo=timezone.utc),
       updated_at=datetime(2024,1,1,tzinfo=timezone.utc)

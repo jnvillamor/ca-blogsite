@@ -85,6 +85,10 @@ class TestCreateBlogUseCase:
     assert result.content == blog_data.content
     assert result.author_id == blog_data.author_id
     assert result.hero_image == blog_data.hero_image
+    assert result.status == "draft"
+    assert result.published_title is None
+    assert result.published_content is None
+    assert result.published_at is None
     assert result.created_at is not None
     assert result.updated_at is not None
 

@@ -2,7 +2,7 @@ import pytest
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock
 
-from src.application.dto import PaginationDTO, BlogResponseDTO, PaginationResponseDTO
+from src.application.dto import PaginationDTO, BlogResponseDTO, PublicBlogResponseDTO, PaginationResponseDTO
 from src.application.use_cases.blogs import GetBlogUseCase
 from src.domain.entities import BlogEntity
 
@@ -179,3 +179,96 @@ class TestGetBlogUseCase:
       limit=pagination.limit,
       search=pagination.search
     )
+
+
+class TestGetPublicBlogById:
+
+  @pytest.fixture
+  def blog_repository(self, mocker):
+    repo = mocker.Mock()
+    repo.get_blog_by_id = AsyncMock()
+    return repo
+
+  @pytest.fixture
+  def use_case(self, blog_repository) -> GetBlogUseCase:
+    return GetBlogUseCase(blog_repository=blog_repository)
+
+  @pytest.fixture
+  def published_blog(self) -> BlogEntity:
+    blog = BlogEntity(
+      id="blog-123",
+      title="Draft Title After Edit",
+      content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Draft content after edit.", "styles": {}}], "children": []}],
+      author_id="author-123",
+      status="published",
+      published_title="Published Title",
+      published_content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Published content.", "styles": {}}], "children": []}],
+      published_at=datetime(2024, 6, 1, tzinfo=timezone.utc),
+      created_at=datetime(2024, 1, 1, tzinfo=timezone.utc),
+      updated_at=datetime(2024, 6, 1, tzinfo=timezone.utc)
+    )
+    return blog
+
+  @pytest.fixture
+  def draft_blog(self) -> BlogEntity:
+    return BlogEntity(
+      id="blog-456",
+      title="Draft Only Title",
+      content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Draft only content.", "styles": {}}], "children": []}],
+      author_id="author-123",
+      status="draft",
+      created_at=datetime(2024, 1, 1, tzinfo=timezone.utc),
+      updated_at=datetime(2024, 1, 1, tzinfo=timezone.utc)
+    )
+
+
+  @pytest.mark.asyncio
+  async def test_get_public_by_id_published_serves_published_snapshot(
+    self,
+    use_case,
+    blog_repository,
+    published_blog
+  ):
+    blog_repository.get_blog_by_id.return_value = published_blog
+
+    result = await use_case.get_public_by_id("blog-123")
+
+    assert isinstance(result, PublicBlogResponseDTO)
+    assert result.title == "Published Title"
+    assert result.content == [{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Published content.", "styles": {}}], "children": []}]
+    assert result.status == "published"
+    assert result.published_at == datetime(2024, 6, 1, tzinfo=timezone.utc)
+    blog_repository.get_blog_by_id.assert_awaited_once_with("blog-123")
+
+
+  @pytest.mark.asyncio
+  async def test_get_public_by_id_draft_serves_draft_content(
+    self,
+    use_case,
+    blog_repository,
+    draft_blog
+  ):
+    blog_repository.get_blog_by_id.return_value = draft_blog
+
+    result = await use_case.get_public_by_id("blog-456")
+
+    assert isinstance(result, PublicBlogResponseDTO)
+    assert result.title == "Draft Only Title"
+    assert result.content == [{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Draft only content.", "styles": {}}], "children": []}]
+    assert result.status == "draft"
+    assert result.published_at is None
+    blog_repository.get_blog_by_id.assert_awaited_once_with("blog-456")
+
+
+  @pytest.mark.asyncio
+  async def test_get_public_by_id_not_found(
+    self,
+    use_case,
+    blog_repository
+  ):
+    blog_repository.get_blog_by_id.return_value = None
+
+    result = await use_case.get_public_by_id("nonexistent-blog")
+
+    assert result is None
+    blog_repository.get_blog_by_id.assert_awaited_once_with("nonexistent-blog")

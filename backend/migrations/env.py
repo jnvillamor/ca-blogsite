@@ -8,6 +8,7 @@ from app.config import config as app_config
 from app.database.db import Base
 from app.database.models import (
     UserModel,
+    BlogModel,
 )
 
 # this is the Alembic Config object, which provides

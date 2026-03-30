@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 from src.domain.value_objects import Title, Content
 
 class BlogEntity:
@@ -7,7 +7,7 @@ class BlogEntity:
     self,
     id: str,
     title: str,
-    content: str,
+    content: list[dict[str, Any]],
     author_id: str,
     hero_image: Optional[str] = None,
     created_at: Optional[datetime] = None,
@@ -35,11 +35,11 @@ class BlogEntity:
     self.__updated_at = datetime.now()
 
   @property
-  def content(self) -> str:
+  def content(self) -> list[dict[str, Any]]:
     return self.__content.value
-  
+
   @content.setter
-  def content(self, value: str):
+  def content(self, value: list[dict[str, Any]]):
     self.__content = Content(value)
     self.__updated_at = datetime.now()
 

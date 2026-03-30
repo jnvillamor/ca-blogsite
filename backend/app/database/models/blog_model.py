@@ -1,16 +1,21 @@
 from app.database.db import Base
 
 from datetime import datetime
-from sqlalchemy import String, ForeignKey, DateTime, func
+from typing import Any, Optional
+
+from sqlalchemy import JSON, String, ForeignKey, DateTime, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
-from typing import Optional
 
 class BlogModel(Base):
   __tablename__ = "blogs"
 
   id: Mapped[str] = mapped_column(primary_key=True)
   title: Mapped[str] = mapped_column(String(100), nullable=False)
-  content: Mapped[str] = mapped_column(String, nullable=False)
+  content: Mapped[list[dict[str, Any]]] = mapped_column(
+    JSON().with_variant(JSONB, "postgresql"),
+    nullable=False
+  )
   author_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
   hero_image: Mapped[Optional[str]] = mapped_column(String, nullable=True)
   created_at: Mapped[datetime] = mapped_column(

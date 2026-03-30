@@ -18,6 +18,16 @@ class BlogModel(Base):
   )
   author_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
   hero_image: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+  status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="draft")
+  published_title: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+  published_content: Mapped[Optional[list[dict[str, Any]]]] = mapped_column(
+    JSON().with_variant(JSONB, "postgresql"),
+    nullable=True
+  )
+  published_at: Mapped[Optional[datetime]] = mapped_column(
+    DateTime(timezone=True),
+    nullable=True
+  )
   created_at: Mapped[datetime] = mapped_column(
     DateTime(timezone=True),
     nullable=False,
@@ -37,6 +47,10 @@ class BlogModel(Base):
       "content": self.content,
       "author_id": self.author_id,
       "hero_image": self.hero_image,
+      "status": self.status,
+      "published_title": self.published_title,
+      "published_content": self.published_content,
+      "published_at": self.published_at,
       "created_at": self.created_at,
       "updated_at": self.updated_at,
     }

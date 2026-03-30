@@ -1,0 +1,1 @@
+- [Backend Architecture Overview](project_architecture.md) — Clean arch layers: domain -> application -> infrastructure, with mappers and UoW pattern

@@ -1,4 +1,5 @@
 from logging.config import fileConfig
+from urllib.parse import urlparse, urlencode, parse_qs, urlunparse
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
@@ -14,7 +15,15 @@ from app.database.models import (
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-config.set_main_option("sqlalchemy.url", app_config.DATABASE_URL)
+parsed = urlparse(app_config.DATABASE_URL)
+params = parse_qs(parsed.query)
+params.pop("ssl", None)
+params["sslmode"] = ["require"]
+sync_url = urlunparse(parsed._replace(
+    scheme="postgresql+psycopg2",
+    query=urlencode({k: v[0] for k, v in params.items()})
+))
+config.set_main_option("sqlalchemy.url", sync_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

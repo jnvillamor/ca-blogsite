@@ -77,7 +77,7 @@ const NavBar = () => {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link
-                      href="/profile"
+                      href={`/profile/${session.user.username}`}
                       className="flex items-center gap-2 cursor-pointer"
                     >
                       <User className="h-4 2-4" />

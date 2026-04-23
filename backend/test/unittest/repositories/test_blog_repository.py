@@ -202,3 +202,101 @@ class TestBlogRepository:
 
     retrieved = await repo.get_blog_by_id("blog123")
     assert retrieved is None
+
+
+  @pytest.mark.asyncio
+  async def test_get_blog_counts_by_author_no_blogs(self, db_session: AsyncSession):
+    repo = BlogRepository(db_session)
+
+    total, published, draft = await repo.get_blog_counts_by_author("user-without-blogs")
+
+    assert total == 0
+    assert published == 0
+    assert draft == 0
+
+
+  @pytest.mark.asyncio
+  async def test_get_blog_counts_by_author_mixed_statuses(self, db_session: AsyncSession):
+    repo = BlogRepository(db_session)
+
+    # 2 drafts, 3 published for user123
+    for i in range(2):
+      await repo.create_blog(BlogEntity(
+        id=f"draft-{i}",
+        title=f"Draft Blog {i}",
+        content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Content", "styles": {}}], "children": []}],
+        author_id="user123",
+        status="draft",
+        created_at=datetime(2024,1,1,tzinfo=timezone.utc),
+        updated_at=datetime(2024,1,1,tzinfo=timezone.utc)
+      ))
+    for i in range(3):
+      await repo.create_blog(BlogEntity(
+        id=f"pub-{i}",
+        title=f"Published Blog {i}",
+        content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Content", "styles": {}}], "children": []}],
+        author_id="user123",
+        status="published",
+        created_at=datetime(2024,1,1,tzinfo=timezone.utc),
+        updated_at=datetime(2024,1,1,tzinfo=timezone.utc)
+      ))
+
+    total, published, draft = await repo.get_blog_counts_by_author("user123")
+
+    assert total == 5
+    assert published == 3
+    assert draft == 2
+
+
+  @pytest.mark.asyncio
+  async def test_get_blog_counts_by_author_filters_by_author(self, db_session: AsyncSession):
+    repo = BlogRepository(db_session)
+
+    # user123: 1 draft, 1 published
+    await repo.create_blog(BlogEntity(
+      id="u123-draft",
+      title="User123 Draft",
+      content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Content", "styles": {}}], "children": []}],
+      author_id="user123",
+      status="draft",
+      created_at=datetime(2024,1,1,tzinfo=timezone.utc),
+      updated_at=datetime(2024,1,1,tzinfo=timezone.utc)
+    ))
+    await repo.create_blog(BlogEntity(
+      id="u123-pub",
+      title="User123 Published",
+      content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Content", "styles": {}}], "children": []}],
+      author_id="user123",
+      status="published",
+      created_at=datetime(2024,1,1,tzinfo=timezone.utc),
+      updated_at=datetime(2024,1,1,tzinfo=timezone.utc)
+    ))
+    # user456: 2 published
+    for i in range(2):
+      await repo.create_blog(BlogEntity(
+        id=f"u456-pub-{i}",
+        title=f"User456 Pub {i}",
+        content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Content", "styles": {}}], "children": []}],
+        author_id="user456",
+        status="published",
+        created_at=datetime(2024,1,1,tzinfo=timezone.utc),
+        updated_at=datetime(2024,1,1,tzinfo=timezone.utc)
+      ))
+
+    total_123, pub_123, draft_123 = await repo.get_blog_counts_by_author("user123")
+    assert (total_123, pub_123, draft_123) == (2, 1, 1)
+
+    total_456, pub_456, draft_456 = await repo.get_blog_counts_by_author("user456")
+    assert (total_456, pub_456, draft_456) == (2, 2, 0)
+
+
+  @pytest.mark.asyncio
+  async def test_get_blog_counts_by_author_returns_ints(self, db_session: AsyncSession):
+    repo = BlogRepository(db_session)
+
+    total, published, draft = await repo.get_blog_counts_by_author("no-such-user")
+
+    # Cover the coalesce(..., 0) / int cast path — empty result must still be plain ints.
+    assert isinstance(total, int)
+    assert isinstance(published, int)
+    assert isinstance(draft, int)

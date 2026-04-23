@@ -30,6 +30,11 @@ class ChangePasswordDTO(BaseModel):
   new_password: str
   confirm_new_password: str
 
+class UserBlogCountDTO(BaseModel):
+  total_blogs: int
+  published_blogs: int
+  draft_blogs: int
+
 class UserResponseDTO(BaseModel):
   id: str
   first_name: str
@@ -38,7 +43,8 @@ class UserResponseDTO(BaseModel):
   avatar: Optional[str] = None
   created_at: datetime
   updated_at: datetime
-  
+  blog_count: Optional[UserBlogCountDTO] = None
+
   model_config = {
     'from_attributes': True
   }
@@ -49,3 +55,6 @@ class UserResponseDTO(BaseModel):
     if value.tzinfo is None:
         value = value.replace(tzinfo=timezone.utc)
     return value.isoformat()
+
+class UserIncludeOptions(BaseModel):
+  include_blog_count: bool = False

@@ -6,8 +6,10 @@ from src.domain.entities.blog_entity import BlogEntity
 from src.application.repositories import IBlogRepository
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, case
 from typing import List, Optional, Tuple
+
+from src.domain.value_objects import BlogStatus
 
 
 class BlogRepository(IBlogRepository):
@@ -106,3 +108,23 @@ class BlogRepository(IBlogRepository):
     await self.session.flush()
 
     return True
+
+
+  async def get_blog_counts_by_author(self, author_id: str) -> Tuple[int, int, int]:
+    published_count = func.coalesce(
+      func.sum(case((BlogModel.status == BlogStatus.PUBLISHED, 1), else_=0)),
+      0,
+    )
+    draft_count = func.coalesce(
+      func.sum(case((BlogModel.status == BlogStatus.DRAFT, 1), else_=0)),
+      0,
+    )
+
+    stmt = (
+      select(func.count(), published_count, draft_count)
+      .where(BlogModel.author_id == author_id)
+    )
+
+    result = await self.session.execute(stmt)
+    total, published, draft = result.one()
+    return int(total), int(published), int(draft)

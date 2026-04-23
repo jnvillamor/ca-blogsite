@@ -2,7 +2,13 @@ import pytest
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock
 
-from src.application.dto import PaginationDTO, PaginationResponseDTO, UserResponseDTO
+from src.application.dto import (
+  PaginationDTO,
+  PaginationResponseDTO,
+  UserResponseDTO,
+  UserIncludeOptions,
+  UserBlogCountDTO,
+)
 from src.application.use_cases.users import GetUserUseCase
 from src.domain.entities import UserEntity
 
@@ -20,8 +26,19 @@ class TestGetUserUseCase:
     return repo
 
   @pytest.fixture
-  def use_case(self, user_repository) -> GetUserUseCase:
-    return GetUserUseCase(user_repository=user_repository)
+  def blog_repository(self, mocker):
+    repo = mocker.Mock()
+
+    repo.get_blog_counts_by_author = AsyncMock()
+
+    return repo
+
+  @pytest.fixture
+  def use_case(self, user_repository, blog_repository) -> GetUserUseCase:
+    return GetUserUseCase(
+      user_repository=user_repository,
+      blog_repository=blog_repository,
+    )
 
   @pytest.fixture
   def valid_user_data(self) -> UserEntity:
@@ -66,6 +83,7 @@ class TestGetUserUseCase:
     self,
     use_case,
     user_repository,
+    blog_repository,
     valid_user_data
   ):
     user_repository.get_user_by_id.return_value = valid_user_data
@@ -74,12 +92,15 @@ class TestGetUserUseCase:
 
     assert result == UserResponseDTO.model_validate(valid_user_data.to_dict())
     user_repository.get_user_by_id.assert_awaited_once_with("123")
+    # By default, include_blog_count is False — blog repo must not be called
+    blog_repository.get_blog_counts_by_author.assert_not_awaited()
 
   @pytest.mark.asyncio
   async def test_get_by_id_not_found(
     self,
     use_case,
-    user_repository
+    user_repository,
+    blog_repository,
   ):
     user_repository.get_user_by_id.return_value = None
 
@@ -87,12 +108,53 @@ class TestGetUserUseCase:
 
     assert result is None
     user_repository.get_user_by_id.assert_awaited_once_with("999")
+    blog_repository.get_blog_counts_by_author.assert_not_awaited()
+
+  @pytest.mark.asyncio
+  async def test_get_by_id_with_blog_count(
+    self,
+    use_case,
+    user_repository,
+    blog_repository,
+    valid_user_data,
+  ):
+    user_repository.get_user_by_id.return_value = valid_user_data
+    blog_repository.get_blog_counts_by_author.return_value = (7, 5, 2)
+
+    include_options = UserIncludeOptions(include_blog_count=True)
+    result = await use_case.get_by_id("123", include_options)
+
+    assert result is not None
+    assert result.blog_count == UserBlogCountDTO(
+      total_blogs=7,
+      published_blogs=5,
+      draft_blogs=2,
+    )
+    blog_repository.get_blog_counts_by_author.assert_awaited_once_with("123")
+
+  @pytest.mark.asyncio
+  async def test_get_by_id_without_blog_count_leaves_field_none(
+    self,
+    use_case,
+    user_repository,
+    blog_repository,
+    valid_user_data,
+  ):
+    user_repository.get_user_by_id.return_value = valid_user_data
+
+    include_options = UserIncludeOptions(include_blog_count=False)
+    result = await use_case.get_by_id("123", include_options)
+
+    assert result is not None
+    assert result.blog_count is None
+    blog_repository.get_blog_counts_by_author.assert_not_awaited()
 
   @pytest.mark.asyncio
   async def test_get_by_username_success(
     self,
     use_case,
     user_repository,
+    blog_repository,
     valid_user_data
   ):
     user_repository.get_user_by_username.return_value = valid_user_data
@@ -101,12 +163,14 @@ class TestGetUserUseCase:
 
     assert result == UserResponseDTO.model_validate(valid_user_data.to_dict())
     user_repository.get_user_by_username.assert_awaited_once_with("johndoe")
+    blog_repository.get_blog_counts_by_author.assert_not_awaited()
 
   @pytest.mark.asyncio
   async def test_by_username_not_found(
     self,
     use_case,
-    user_repository
+    user_repository,
+    blog_repository,
   ):
     user_repository.get_user_by_username.return_value = None
 
@@ -114,12 +178,36 @@ class TestGetUserUseCase:
 
     assert result is None
     user_repository.get_user_by_username.assert_awaited_once_with("unknownuser")
+    blog_repository.get_blog_counts_by_author.assert_not_awaited()
+
+  @pytest.mark.asyncio
+  async def test_get_by_username_with_blog_count(
+    self,
+    use_case,
+    user_repository,
+    blog_repository,
+    valid_user_data,
+  ):
+    user_repository.get_user_by_username.return_value = valid_user_data
+    blog_repository.get_blog_counts_by_author.return_value = (3, 1, 2)
+
+    include_options = UserIncludeOptions(include_blog_count=True)
+    result = await use_case.get_by_username("johndoe", include_options)
+
+    assert result is not None
+    assert result.blog_count == UserBlogCountDTO(
+      total_blogs=3,
+      published_blogs=1,
+      draft_blogs=2,
+    )
+    blog_repository.get_blog_counts_by_author.assert_awaited_once_with("123")
 
   @pytest.mark.asyncio
   async def test_get_all_users(
     self,
     use_case,
     user_repository,
+    blog_repository,
     valid_users_list
   ):
     pagination = PaginationDTO(skip=0, limit=10, search=None)
@@ -148,12 +236,14 @@ class TestGetUserUseCase:
       limit=pagination.limit,
       search=pagination.search
     )
+    blog_repository.get_blog_counts_by_author.assert_not_awaited()
 
   @pytest.mark.asyncio
   async def test_get_all_users_with_search(
     self,
     use_case,
     user_repository,
+    blog_repository,
     valid_users_list
   ):
     pagination = PaginationDTO(skip=0, limit=10, search="john")
@@ -186,3 +276,43 @@ class TestGetUserUseCase:
       limit=pagination.limit,
       search=pagination.search
     )
+    blog_repository.get_blog_counts_by_author.assert_not_awaited()
+
+  @pytest.mark.asyncio
+  async def test_get_all_users_with_blog_count(
+    self,
+    use_case,
+    user_repository,
+    blog_repository,
+    valid_users_list,
+  ):
+    pagination = PaginationDTO(skip=0, limit=10, search=None)
+
+    user_repository.get_all_users.return_value = (
+      valid_users_list,
+      len(valid_users_list),
+    )
+
+    # Return per-author counts in the order get_blog_counts_by_author is called
+    blog_repository.get_blog_counts_by_author.side_effect = [
+      (4, 3, 1),  # user 123
+      (0, 0, 0),  # user 124
+    ]
+
+    include_options = UserIncludeOptions(include_blog_count=True)
+    result = await use_case.get_all_users(pagination, include_options)
+
+    assert result.total == len(valid_users_list)
+    assert len(result.items) == len(valid_users_list)
+    assert result.items[0].blog_count == UserBlogCountDTO(
+      total_blogs=4,
+      published_blogs=3,
+      draft_blogs=1,
+    )
+    assert result.items[1].blog_count == UserBlogCountDTO(
+      total_blogs=0,
+      published_blogs=0,
+      draft_blogs=0,
+    )
+    # One call per user
+    assert blog_repository.get_blog_counts_by_author.await_count == len(valid_users_list)

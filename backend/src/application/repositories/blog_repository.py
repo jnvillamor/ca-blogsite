@@ -88,3 +88,15 @@ class IBlogRepository(ABC):
       blog_id (str): The ID of the blog to delete.
     """
     pass
+
+  @abstractmethod
+  async def get_blog_counts_by_author(self, author_id: str) -> Tuple[int, int, int]:
+    """Get blog counts for a specific author grouped by status.
+
+    Args:
+      author_id (str): The ID of the author.
+
+    Returns:
+      Tuple[int, int, int]: (total_blogs, published_blogs, draft_blogs)
+    """
+    pass

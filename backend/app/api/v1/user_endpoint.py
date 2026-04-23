@@ -3,10 +3,10 @@ from fastapi import APIRouter, Request, Depends, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession 
 
-from app.api.dependencies import get_current_user
+from app.api.dependencies import get_current_user, get_user_include_options
 from app.database.db import get_db
 from app.database.unit_of_work import get_uow
-from app.repositories import UserRepository
+from app.repositories import UserRepository, BlogRepository
 from app.services import PasswordHasher, UuidGenerator
 from src.application.dto import (
   CreateUserDTO, 
@@ -14,7 +14,8 @@ from src.application.dto import (
   ChangePasswordDTO,
   UserResponseDTO,
   PaginationDTO,
-  PaginationResponseDTO
+  PaginationResponseDTO,
+  UserIncludeOptions
 )
 from src.application.use_cases.users import (
   CreateUserUseCase, 
@@ -79,12 +80,14 @@ async def register_user(
 async def get_users(
   request: Request,
   pagination: PaginationDTO = Depends(),
+  include_options: UserIncludeOptions = Depends(get_user_include_options),
   session: AsyncSession = Depends(get_db),
 ):
   logger.info(f"Fetching users with pagination: skip={pagination.skip}, limit={pagination.limit}, search='{pagination.search}'")
   user_repo = UserRepository(session)
-  use_case = GetUserUseCase(user_repo)
-  result = await use_case.get_all_users(pagination)
+  blog_repo = BlogRepository(session)
+  use_case = GetUserUseCase(user_repo, blog_repo)
+  result = await use_case.get_all_users(pagination, include_options)
   logger.info(f"Number of users fetched: {len(result.items)}")
   return result
 
@@ -106,12 +109,14 @@ async def get_users(
 async def get_user(
   request: Request,
   user_id: str,
+  include_options: UserIncludeOptions = Depends(get_user_include_options),
   session: AsyncSession = Depends(get_db),
 ):
   logger.info(f"Fetching user with ID: {user_id}")
   user_repo = UserRepository(session)
-  use_case = GetUserUseCase(user_repo)
-  result = await use_case.get_by_id(user_id)
+  blog_repo = BlogRepository(session)
+  use_case = GetUserUseCase(user_repo, blog_repo)
+  result = await use_case.get_by_id(user_id, include_options)
 
   if result is None:
     logger.warning(f"User with ID '{user_id}' not found.")
@@ -141,12 +146,14 @@ async def get_user(
 async def get_user_by_username(
   request: Request,
   username: str,
+  include_options: UserIncludeOptions = Depends(get_user_include_options),
   session: AsyncSession = Depends(get_db),
 ):
   logger.info(f"Fetching user with username: {username}")
   user_repo = UserRepository(session)
-  use_case = GetUserUseCase(user_repo)
-  result = await use_case.get_by_username(username)
+  blog_repo = BlogRepository(session)
+  use_case = GetUserUseCase(user_repo, blog_repo)
+  result = await use_case.get_by_username(username, include_options)
   if result is None:
     logger.warning(f"User with username '{username}' not found.")
     return JSONResponse(

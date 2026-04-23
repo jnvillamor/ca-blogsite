@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Any, Optional
-from src.domain.value_objects import Title, Content
+from src.domain.value_objects import Title, Content, BlogStatus
 
 class BlogEntity:
   def __init__(
@@ -10,7 +10,7 @@ class BlogEntity:
     content: list[dict[str, Any]],
     author_id: str,
     hero_image: Optional[str] = None,
-    status: str = "draft",
+    status: str = BlogStatus.DRAFT,
     published_title: Optional[str] = None,
     published_content: Optional[list[dict[str, Any]]] = None,
     published_at: Optional[datetime] = None,
@@ -22,7 +22,7 @@ class BlogEntity:
     self.__content = Content(content)
     self.__author_id = author_id
     self.__hero_image = hero_image
-    self.__status = status
+    self.__status = BlogStatus(status)
     self.__published_title = published_title
     self.__published_content = published_content
     self.__published_at = published_at
@@ -66,11 +66,11 @@ class BlogEntity:
 
   @property
   def status(self) -> str:
-    return self.__status
+    return self.__status.value
 
   @status.setter
   def status(self, value: str):
-    self.__status = value
+    self.__status = BlogStatus(value)
     self.__updated_at = datetime.now()
 
   @property
@@ -107,7 +107,7 @@ class BlogEntity:
 
   def publish(self) -> None:
     """Publish the blog by copying current draft fields into the published snapshot."""
-    self.__status = "published"
+    self.__status = BlogStatus(BlogStatus.PUBLISHED)
     self.__published_title = self.__title.value
     self.__published_content = self.__content.value
     self.__published_at = datetime.now()

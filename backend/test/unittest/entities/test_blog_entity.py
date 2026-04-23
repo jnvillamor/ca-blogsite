@@ -2,6 +2,7 @@ import pytest
 from datetime import datetime, timezone
 
 from src.domain.entities import BlogEntity
+from src.domain.exceptions import InvalidDataException
 
 
 SAMPLE_CONTENT = [{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Hello world.", "styles": {}}], "children": []}]
@@ -134,3 +135,56 @@ class TestBlogEntityToDict:
     assert result["published_title"] is None
     assert result["published_content"] is None
     assert result["published_at"] is None
+
+
+class TestBlogEntityStatusValidation:
+
+  def test_invalid_status_on_construction_raises(self):
+    with pytest.raises(InvalidDataException):
+      BlogEntity(
+        id="blog-1",
+        title="A Title",
+        content=SAMPLE_CONTENT,
+        author_id="author-1",
+        status="archived",
+      )
+
+  def test_status_setter_accepts_valid_value(self):
+    blog = BlogEntity(
+      id="blog-1",
+      title="A Title",
+      content=SAMPLE_CONTENT,
+      author_id="author-1",
+      status="draft",
+    )
+
+    blog.status = "published"
+
+    assert blog.status == "published"
+
+  def test_status_setter_rejects_invalid_value(self):
+    blog = BlogEntity(
+      id="blog-1",
+      title="A Title",
+      content=SAMPLE_CONTENT,
+      author_id="author-1",
+      status="draft",
+    )
+
+    with pytest.raises(InvalidDataException):
+      blog.status = "archived"
+
+    # Original status is unchanged.
+    assert blog.status == "draft"
+
+  def test_status_getter_returns_string_not_value_object(self):
+    blog = BlogEntity(
+      id="blog-1",
+      title="A Title",
+      content=SAMPLE_CONTENT,
+      author_id="author-1",
+      status="published",
+    )
+
+    assert isinstance(blog.status, str)
+    assert blog.status == "published"

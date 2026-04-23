@@ -1,6 +1,6 @@
 import { config } from "@/config/config"
 import { AuthException } from "@/config/exceptions"
-import { loginUser, logout, refreshToken } from "@/data-access/auth/auth.data-access"
+import { loginUser, logout, refreshToken } from "@/data-access/auth.data-access"
 import { jwtDecode } from "jwt-decode"
 import type {
   GetServerSidePropsContext,

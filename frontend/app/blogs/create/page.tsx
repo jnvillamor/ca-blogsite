@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
-import CreateBlogForm from "../_components/create-blog-form"
+import CreateBlogForm from "./_components/create-blog-form"
+import ProtectedPage from "@/components/protected-page"
 
 const CreateBlog = () => {
   return (
@@ -22,4 +23,12 @@ const CreateBlog = () => {
   )
 }
 
-export default CreateBlog
+const CreateBlogPage = () => {
+  return (
+    <ProtectedPage>
+      <CreateBlog />
+    </ProtectedPage>
+  )
+}
+
+export default CreateBlogPage

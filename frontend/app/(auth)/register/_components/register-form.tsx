@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { AuthException } from "@/config/exceptions"
-import { registerUser } from "@/data-access/auth/auth.data-access"
+import { registerUser } from "@/data-access/auth.data-access"
 import { RegisterData, RegisterSchema } from "@/data-access/schemas/auth.schema"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"

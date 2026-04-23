@@ -2,13 +2,13 @@
 
 import { Separator } from "@/components/ui/separator"
 import { useAppForm } from "@/hooks/form"
-import useAutoSaveForm from "../_hooks/useAutoSaveForm"
-import { CreateBlogData } from "@/data-access/schemas/blogs.schema"
+import useAutoSaveForm from "../../_hooks/useAutoSaveForm"
+import { CreateBlogData, CreateBlogSchema } from "@/data-access/schemas/blogs.schema"
+import { createBlog } from "@/data-access/blogs.data-access"
 
 const CreateBlogForm = () => {
   const local_storage_key = "create_blog_form_data"
   const local_data = localStorage.getItem(local_storage_key)
-  console.log(local_data)
 
   const form = useAppForm({
     defaultValues: local_data ? JSON.parse(local_data) : {
@@ -20,7 +20,13 @@ const CreateBlogForm = () => {
   const { triggerAutosave, status } = useAutoSaveForm<CreateBlogData>({
     delay: 5000,
     onSave: async (form_data: CreateBlogData) => {
-      console.log("Auto-saving form data:", form_data)
+      try {
+        const serialized_data = CreateBlogSchema.parse(form_data)
+        const response = await createBlog(serialized_data)
+        console.log("Blog created successfully:", response)
+      } catch (error) {
+        console.error("Autosave failed:", error)
+      }
     },
     storageKey: "create_blog_form_data",
   })

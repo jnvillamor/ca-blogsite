@@ -15,16 +15,19 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { LogOut, Plus, User } from "lucide-react"
 import { Spinner } from "./ui/spinner"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 const NavBar = () => {
   const { data: session, status } = useSession()
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false)
+  const router = useRouter()
 
   const handleSignOut = async (event: Event) => {
     event.preventDefault()
     setIsLoggingOut(true)
     await signOut({ redirect: false })
     setIsLoggingOut(false)
+    router.push("/login")
   }
 
   return (

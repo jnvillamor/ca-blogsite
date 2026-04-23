@@ -11,8 +11,8 @@ const BlockNoteSchema: z.ZodType<any> = z.lazy(() =>
 )
 
 export const CreateBlogSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  content: BlockNoteSchema,
+  title: z.string(),
+  content: z.array(BlockNoteSchema),
   hero_image: z.string().url().optional(),
 })
 

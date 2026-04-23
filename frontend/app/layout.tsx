@@ -1,11 +1,11 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import "@/styles/globals.css"
-import { ThemeProvider } from "@/components/providers/theme-provider"
-import NavBar from "@/components/navbar"
-import SessionProvider from "@/components/providers/session-provider"
+import { ThemeProvider } from "@/common/components/providers/theme-provider" 
+import NavBar from "@/common/components/navbar"
+import SessionProvider from "@/common/components/providers/session-provider"
 import { Toaster } from "sonner"
-import PageTransitionContainer from "@/components/page-transition"
+import PageTransitionContainer from "@/common/components/page-transition"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

@@ -6,7 +6,7 @@ import { BlockNoteView } from "@blocknote/mantine"
 import "@blocknote/mantine/style.css"
 import "@blocknote/core/fonts/inter.css"
 import "@/styles/blocknote.css"
-import { useFieldContext } from "@/hooks/form"
+import { useFieldContext } from "@/common/hooks/form"
 
 type ContentType = PartialBlock[]
 

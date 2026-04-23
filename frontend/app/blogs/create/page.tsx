@@ -1,8 +1,8 @@
-import { Button } from "@/components/ui/button"
+import { Button } from "@/common/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import CreateBlogForm from "./_components/create-blog-form"
-import ProtectedPage from "@/components/protected-page"
+import ProtectedPage from "@/common/components/protected-page"
 
 const CreateBlog = () => {
   return (

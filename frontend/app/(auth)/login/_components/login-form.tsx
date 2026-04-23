@@ -1,18 +1,18 @@
 "use client"
 
-import { useAppForm } from "@/hooks/form"
+import { useAppForm } from "@/common/hooks/form"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/common/components/ui/card"
 import { LoginData, LoginSchema } from "@/data-access/schemas/auth.schema"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Label } from "@/components/ui/label"
+import { Label } from "@/common/components/ui/label"
 
 const LoginForm = () => {
   const router = useRouter()

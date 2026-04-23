@@ -1,19 +1,19 @@
 "use client"
 
-import { useAppForm } from "@/hooks/form"
+import { useAppForm } from "@/common/hooks/form"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/common/components/ui/card"
 import { AuthException } from "@/config/exceptions"
 import { registerUser } from "@/data-access/auth.data-access"
 import { RegisterData, RegisterSchema } from "@/data-access/schemas/auth.schema"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Label } from "@/components/ui/label"
+import { Label } from "@/common/components/ui/label"
 
 const RegisterForm = () => {
   const router = useRouter()

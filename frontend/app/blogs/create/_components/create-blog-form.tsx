@@ -1,7 +1,7 @@
 "use client"
 
-import { Separator } from "@/components/ui/separator"
-import { useAppForm } from "@/hooks/form"
+import { Separator } from "@/common/components/ui/separator"
+import { useAppForm } from "@/common/hooks/form"
 import useAutoSaveForm from "../../_hooks/useAutoSaveForm"
 import { CreateBlogData, CreateBlogSchema } from "@/data-access/schemas/blogs.schema"
 import { createBlog } from "@/data-access/blogs.data-access"

@@ -49,6 +49,7 @@ export const SensitiveInputField = ({
           {...props}
         />
         <Button
+          type="button"
           variant="ghost"
           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground cursor-pointer transition-colors"
           onClick={() => setShowPassword(!showPassword)}

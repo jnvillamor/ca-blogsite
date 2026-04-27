@@ -1,7 +1,4 @@
 import { config } from '@/config/config'
-import { AuthException } from '@/config/exceptions'
-import { authConfig } from '@/lib/auth'
-import { getServerSession } from 'next-auth'
 import { ProfileResponse, UserIncludeOptions } from './dto/user.dto'
 
 const USER_ENDPOINT = `${config.apiEndpoint}/${config.apiVersion}/users`
@@ -10,16 +7,6 @@ export const getUserProfile = async (
   username: string,
   include_options?: UserIncludeOptions,
 ): Promise<ProfileResponse> => {
-  const session = await getServerSession(authConfig)
-
-  if (!session) {
-    return {
-      error: true,
-      status_code: 401,
-      error_message: 'User is not authenticated',
-    }
-  }
-
   const params = new URLSearchParams()
   if (include_options) {
     Object.entries(include_options).forEach(([key, value]) => {
@@ -33,7 +20,6 @@ export const getUserProfile = async (
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${session?.access_token}`,
       },
     },
   )

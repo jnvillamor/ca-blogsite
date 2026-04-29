@@ -272,3 +272,178 @@ class TestGetPublicBlogById:
 
     assert result is None
     blog_repository.get_blog_by_id.assert_awaited_once_with("nonexistent-blog")
+
+
+class TestGetAllPublicBlogsByAuthor:
+
+  @pytest.fixture
+  def blog_repository(self, mocker):
+    repo = mocker.Mock()
+    repo.get_all_public_blogs_by_author = AsyncMock()
+    return repo
+
+  @pytest.fixture
+  def use_case(self, blog_repository) -> GetBlogUseCase:
+    return GetBlogUseCase(blog_repository=blog_repository)
+
+  @pytest.fixture
+  def published_blog(self) -> BlogEntity:
+    """A blog whose status is 'published' and has a complete published snapshot."""
+    return BlogEntity(
+      id="blog-pub-1",
+      title="Draft Title After Edit",
+      content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Draft content after edit.", "styles": {}}], "children": []}],
+      author_id="author-123",
+      status="published",
+      published_title="Published Title",
+      published_content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Published content.", "styles": {}}], "children": []}],
+      published_at=datetime(2024, 6, 1, tzinfo=timezone.utc),
+      created_at=datetime(2024, 1, 1, tzinfo=timezone.utc),
+      updated_at=datetime(2024, 6, 1, tzinfo=timezone.utc)
+    )
+
+  @pytest.fixture
+  def edited_published_blog(self) -> BlogEntity:
+    """A blog that was published, then edited — status flipped to 'draft' but snapshot is intact."""
+    return BlogEntity(
+      id="blog-pub-2",
+      title="Edited Draft Title",
+      content=[{"id": "2", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Edited draft content.", "styles": {}}], "children": []}],
+      author_id="author-123",
+      status="draft",
+      published_title="Snapshot Title",
+      published_content=[{"id": "2", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Snapshot content.", "styles": {}}], "children": []}],
+      published_at=datetime(2024, 5, 1, tzinfo=timezone.utc),
+      created_at=datetime(2024, 1, 1, tzinfo=timezone.utc),
+      updated_at=datetime(2024, 7, 1, tzinfo=timezone.utc)
+    )
+
+  @pytest.fixture
+  def blog_with_only_published_at(self) -> BlogEntity:
+    """Defensive-guard fixture: published_at is set but published_title is None.
+
+    Use case must fall back to the draft title/content rather than crashing.
+    """
+    return BlogEntity(
+      id="blog-pub-3",
+      title="Fallback Title",
+      content=[{"id": "3", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Fallback content.", "styles": {}}], "children": []}],
+      author_id="author-123",
+      status="published",
+      published_title=None,
+      published_content=None,
+      published_at=datetime(2024, 4, 1, tzinfo=timezone.utc),
+      created_at=datetime(2024, 1, 1, tzinfo=timezone.utc),
+      updated_at=datetime(2024, 4, 1, tzinfo=timezone.utc)
+    )
+
+
+  @pytest.mark.asyncio
+  async def test_returns_pagination_response_shape(
+    self,
+    use_case,
+    blog_repository,
+    published_blog
+  ):
+    pagination = PaginationDTO(skip=0, limit=10, search=None)
+
+    blog_repository.get_all_public_blogs_by_author.return_value = (
+      [published_blog],
+      1
+    )
+
+    result = await use_case.get_all_public_blogs_by_author("author-123", pagination)
+
+    assert isinstance(result, PaginationResponseDTO)
+    assert result.total == 1
+    assert result.skip == 0
+    assert result.limit == 10
+    assert len(result.items) == 1
+    assert isinstance(result.items[0], PublicBlogResponseDTO)
+
+
+  @pytest.mark.asyncio
+  async def test_each_item_uses_published_snapshot(
+    self,
+    use_case,
+    blog_repository,
+    published_blog,
+    edited_published_blog
+  ):
+    pagination = PaginationDTO(skip=0, limit=10, search=None)
+
+    blog_repository.get_all_public_blogs_by_author.return_value = (
+      [published_blog, edited_published_blog],
+      2
+    )
+
+    result = await use_case.get_all_public_blogs_by_author("author-123", pagination)
+
+    assert len(result.items) == 2
+
+    # First item: published — snapshot replaces draft fields.
+    assert result.items[0].title == "Published Title"
+    assert result.items[0].content == [{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Published content.", "styles": {}}], "children": []}]
+
+    # Second item: edited after publish — snapshot still served despite status="draft".
+    assert result.items[1].title == "Snapshot Title"
+    assert result.items[1].content == [{"id": "2", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Snapshot content.", "styles": {}}], "children": []}]
+
+
+  @pytest.mark.asyncio
+  async def test_falls_back_to_draft_when_published_title_is_none(
+    self,
+    use_case,
+    blog_repository,
+    blog_with_only_published_at
+  ):
+    """Defensive guard: if published_title is None, use case must not swap and must fall back to draft."""
+    pagination = PaginationDTO(skip=0, limit=10, search=None)
+
+    blog_repository.get_all_public_blogs_by_author.return_value = (
+      [blog_with_only_published_at],
+      1
+    )
+
+    result = await use_case.get_all_public_blogs_by_author("author-123", pagination)
+
+    assert len(result.items) == 1
+    assert result.items[0].title == "Fallback Title"
+    assert result.items[0].content == [{"id": "3", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Fallback content.", "styles": {}}], "children": []}]
+
+
+  @pytest.mark.asyncio
+  async def test_repository_called_with_pagination_args(
+    self,
+    use_case,
+    blog_repository
+  ):
+    pagination = PaginationDTO(skip=5, limit=20, search="hello")
+
+    blog_repository.get_all_public_blogs_by_author.return_value = ([], 0)
+
+    await use_case.get_all_public_blogs_by_author("author-xyz", pagination)
+
+    blog_repository.get_all_public_blogs_by_author.assert_awaited_once_with(
+      author_id="author-xyz",
+      skip=5,
+      limit=20,
+      search="hello"
+    )
+
+
+  @pytest.mark.asyncio
+  async def test_empty_result(
+    self,
+    use_case,
+    blog_repository
+  ):
+    pagination = PaginationDTO(skip=0, limit=10, search=None)
+
+    blog_repository.get_all_public_blogs_by_author.return_value = ([], 0)
+
+    result = await use_case.get_all_public_blogs_by_author("author-with-no-blogs", pagination)
+
+    assert isinstance(result, PaginationResponseDTO)
+    assert result.total == 0
+    assert result.items == []

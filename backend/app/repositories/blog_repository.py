@@ -82,6 +82,33 @@ class BlogRepository(IBlogRepository):
     return [blog_model_to_entity(blog) for blog in blogs], total
 
 
+  async def get_all_public_blogs_by_author(
+    self,
+    author_id: str,
+    skip: int = 0,
+    limit: int = 10,
+    search: str | None = None
+  ) -> Tuple[List[BlogEntity], int]:
+
+    stmt = select(BlogModel).where(
+      BlogModel.author_id == author_id,
+      BlogModel.published_at.is_not(None)
+    )
+
+    if search:
+      stmt = stmt.where(BlogModel.title.ilike(f"%{search}%"))
+
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total = (await self.session.execute(count_stmt)).scalar_one()
+
+    stmt = stmt.offset(skip).limit(limit)
+
+    result = await self.session.execute(stmt)
+    blogs = result.scalars().all()
+
+    return [blog_model_to_entity(blog) for blog in blogs], total
+
+
   async def update_blog(self, blog_id: str, blog: BlogEntity) -> BlogEntity:
 
     existing_blog = await self.session.get(BlogModel, blog_id)

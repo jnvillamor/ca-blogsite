@@ -111,6 +111,34 @@ async def get_blogs_by_author(
   return result
 
 @router.get(
+  "/author/{author_id}/public",
+  status_code=status.HTTP_200_OK,
+  response_model=PaginationResponseDTO[PublicBlogResponseDTO],
+  response_model_exclude_none=True,
+  responses={
+    200: {"description": "Public blogs by author retrieved successfully."},
+    400: {"description": "Bad Request."},
+    500: {"description": "Internal Server Error."}
+  }
+)
+@router.get(
+  "/author/{author_id}/public/",
+  include_in_schema=False
+)
+async def get_public_blogs_by_author(
+  request: Request,
+  author_id: str,
+  pagination: PaginationDTO = Depends(),
+  session: AsyncSession = Depends(get_db)
+):
+  logger.info(f"Fetching public blogs for author_id: {author_id} with pagination: skip: {pagination.skip}, limit: {pagination.limit}")
+  blog_repository = BlogRepository(session)
+  use_case = GetBlogUseCase(blog_repository)
+  result = await use_case.get_all_public_blogs_by_author(author_id, pagination)
+  logger.info(f"Number of public blogs fetched for author_id '{author_id}': {len(result.items)}")
+  return result
+
+@router.get(
   "/{blog_id}/public",
   status_code=status.HTTP_200_OK,
   response_model=PublicBlogResponseDTO,

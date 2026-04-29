@@ -68,6 +68,27 @@ class IBlogRepository(ABC):
     pass
 
   @abstractmethod
+  async def get_all_public_blogs_by_author(
+    self,
+    author_id: str,
+    skip: int = 0,
+    limit: int = 10,
+    search: Optional[str] = None
+  ) -> Tuple[List[BlogEntity], int]:
+    """Retrieve all published blogs by a specific author with pagination and optional search.
+
+    Args:
+      author_id (str): The ID of the author whose published blogs to retrieve.
+      skip (int, optional): Number of records to skip. Defaults to 0.
+      limit (int, optional): Maximum number of records to return. Defaults to 10.
+      search (Optional[str], optional): Search term for filtering blogs. Defaults to None.
+
+    Returns:
+      Tuple[List[BlogEntity], int]: A tuple containing the list of published blog entities and the total count.
+    """
+    pass
+
+  @abstractmethod
   async def update_blog(self, blog_id: str, blog: BlogEntity) -> BlogEntity:
     """Update an existing blog.
 

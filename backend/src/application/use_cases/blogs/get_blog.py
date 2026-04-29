@@ -61,3 +61,33 @@ class GetBlogUseCase:
       limit=pagination.limit,
       items=blog_dtos
     )
+
+  async def get_all_public_blogs_by_author(self, author_id: str, pagination: PaginationDTO) -> PaginationResponseDTO[PublicBlogResponseDTO]:
+    """Get the public-facing list of an author's published blogs.
+
+    Serves the published snapshot (published_title/published_content) for each blog.
+    """
+    blogs, count = await self.blog_repository.get_all_public_blogs_by_author(
+      author_id=author_id,
+      skip=pagination.skip,
+      limit=pagination.limit,
+      search=pagination.search
+    )
+
+    blog_dtos = []
+    for blog in blogs:
+      blog_dict = blog.to_dict()
+
+      # Serve the published snapshot
+      if blog_dict["published_title"] is not None:
+        blog_dict["title"] = blog_dict["published_title"]
+        blog_dict["content"] = blog_dict["published_content"]
+
+      blog_dtos.append(PublicBlogResponseDTO.model_validate(blog_dict))
+
+    return PaginationResponseDTO(
+      total=count,
+      skip=pagination.skip,
+      limit=pagination.limit,
+      items=blog_dtos
+    )

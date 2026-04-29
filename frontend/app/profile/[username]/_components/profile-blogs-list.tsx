@@ -20,7 +20,11 @@ const ProfileBlogsList = ({
   pagination_params,
   isOwner,
 }: ProfileBlogsListProps) => {
-  const { status, blogs, error } = useProfileBlogs(user_id, pagination_params)
+  const { status, blogs, error } = useProfileBlogs(
+    user_id,
+    pagination_params,
+    isOwner,
+  )
 
   if (status === 'loading') {
     return <div>Loading blogs...</div>
@@ -90,11 +94,15 @@ const ProfileBlogsList = ({
         <Card>
           <CardContent className="py-12 text-center">
             <p className="text-muted-foreground mb-4">
-              You haven&apos;t written any blogs yet.
+              {isOwner
+                ? "You haven't written any blogs yet."
+                : 'This user has not published any blogs yet.'}
             </p>
-            <Button asChild>
-              <Link href="">Write Your First Blog</Link>
-            </Button>
+            {isOwner && (
+              <Button asChild>
+                <Link href="">Write Your First Blog</Link>
+              </Button>
+            )}
           </CardContent>
         </Card>
       )}
@@ -118,12 +126,22 @@ const ProfileBlogsListActions = ({
         </Link>
       </Button>
       {isOwner && (
-        <Button variant="ghost" size="sm" asChild className="gap-2">
-          <Link href={`/blogs/${blog.id}/edit`}>
-            <Edit2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Edit</span>
-          </Link>
-        </Button>
+        <>
+          <Button variant="ghost" size="sm" asChild className="gap-2">
+            <Link href={`/blogs/${blog.id}/edit`}>
+              <Edit2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Edit</span>
+            </Link>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-2 text-destructive hover:text-destructive cursor-pointer"
+          >
+            <Trash2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Delete</span>
+          </Button>
+        </>
       )}
     </div>
   )

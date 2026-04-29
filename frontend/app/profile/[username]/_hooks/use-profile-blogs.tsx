@@ -13,6 +13,7 @@ type UserProfileStatus = 'idle' | 'loading' | 'success' | 'error'
 export const useProfileBlogs = (
   user_id: string,
   pagination_params?: PaginationParamsDTO,
+  isOwner: boolean = false,
 ) => {
   const [status, setStatus] = useState<UserProfileStatus>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -23,8 +24,7 @@ export const useProfileBlogs = (
     const fetchBlogs = async () => {
       setStatus('loading')
       try {
-        const blogs_data = await getBlogsByAuthor(user_id, pagination_params)
-        console.log(blogs_data)
+        const blogs_data = await getBlogsByAuthor(user_id, pagination_params, !isOwner)
 
         setBlogs(blogs_data)
         setStatus('success')

@@ -11,7 +11,7 @@ export interface PublicBlogResponseDTO {
   created_at: string
   updated_at: string
   hero_image?: string
-  author: BasicUserDTO
+  author?: BasicUserDTO
 }
 
 export interface BlogResponseDTO extends PublicBlogResponseDTO {

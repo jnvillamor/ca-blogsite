@@ -1,13 +1,12 @@
 'use client'
 
 import { PaginationParamsDTO } from '@/data-access/dto/common.dto'
-import { useProfileBlogs } from '../_hooks/use-profile-blogs'
+import { ProfileBlog, useProfileBlogs } from '../_hooks/use-profile-blogs'
 import { Card, CardContent } from '@/common/components/ui/card'
 import { Button } from '@/common/components/ui/button'
 import Link from 'next/link'
 import { extractContentPreview, formatReadingTime } from '@/lib/content-preview'
 import { Clock, Edit2, Eye, Trash2 } from 'lucide-react'
-import { BlogResponseDTO } from '@/data-access/dto/blogs.dto'
 
 type ProfileBlogsListProps = {
   user_id: string
@@ -114,7 +113,7 @@ const ProfileBlogsListActions = ({
   blog,
   isOwner,
 }: {
-  blog: BlogResponseDTO
+  blog: ProfileBlog
   isOwner?: boolean
 }) => {
   return (

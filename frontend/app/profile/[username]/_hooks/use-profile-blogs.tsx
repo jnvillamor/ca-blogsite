@@ -1,7 +1,13 @@
 'use client'
 
-import { getBlogsByAuthor } from '@/data-access/blogs.data-access'
-import { BlogResponseDTO } from '@/data-access/dto/blogs.dto'
+import {
+  getMyBlogs,
+  getPublicBlogsByAuthor,
+} from '@/data-access/blogs.data-access'
+import {
+  BlogResponseDTO,
+  PublicBlogResponseDTO,
+} from '@/data-access/dto/blogs.dto'
 import {
   PaginatedResponseDTO,
   PaginationParamsDTO,
@@ -9,6 +15,8 @@ import {
 import { useEffect, useState } from 'react'
 
 type UserProfileStatus = 'idle' | 'loading' | 'success' | 'error'
+
+export type ProfileBlog = BlogResponseDTO | PublicBlogResponseDTO
 
 export const useProfileBlogs = (
   user_id: string,
@@ -18,13 +26,15 @@ export const useProfileBlogs = (
   const [status, setStatus] = useState<UserProfileStatus>('idle')
   const [error, setError] = useState<string | null>(null)
   const [blogs, setBlogs] =
-    useState<PaginatedResponseDTO<BlogResponseDTO> | null>(null)
+    useState<PaginatedResponseDTO<ProfileBlog> | null>(null)
 
   useEffect(() => {
     const fetchBlogs = async () => {
       setStatus('loading')
       try {
-        const blogs_data = await getBlogsByAuthor(user_id, pagination_params, !isOwner)
+        const blogs_data = isOwner
+          ? await getMyBlogs(pagination_params)
+          : await getPublicBlogsByAuthor(user_id, pagination_params)
 
         setBlogs(blogs_data)
         setStatus('success')
@@ -42,7 +52,7 @@ export const useProfileBlogs = (
     }
 
     fetchBlogs()
-  }, [user_id, pagination_params])
+  }, [user_id, pagination_params, isOwner])
 
   return { status, blogs, error }
 }

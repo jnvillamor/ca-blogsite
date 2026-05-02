@@ -1,4 +1,3 @@
-import re
 import pytest
 from httpx import AsyncClient
 
@@ -38,41 +37,49 @@ class TestCreateBlogEndpoint:
     assert data["detail"] == "Author not found."
   
   @pytest.mark.parametrize(
-    "title, error_regex",
+    "title",
     [
-      ("", r"Title cannot be empty."),
-      (" " * 10, r"Title cannot be empty."),
-      ("Shrt", r"Title must be at least 5 characters long."),
-      ("T" * 101, r"Title cannot exceed 100 characters.")
-    ]
+      "",
+      " " * 10,
+      "Shrt",
+      "T" * 101,
+    ],
+    ids=["empty", "whitespace_only", "too_short", "too_long"]
   )
-  async def test_create_blog_invalid_title(
+  async def test_create_blog_persists_draft_with_publish_invalid_title(
     self,
     existing_users,
     api_version,
     create_existing_users,
     client: AsyncClient,
-    title,
-    error_regex
+    title
   ):
+    """The endpoint must accept titles that would fail publish-time invariants
+    when the blog is being created as a draft. Publish-time invariants are
+    exercised separately at the entity / use-case layer."""
     payload = {
       "title": title,
-      "content": [{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Valid content for testing.", "styles": {}}], "children": []}],
+      "content": [{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Valid content for draft.", "styles": {}}], "children": []}],
       "author_id": existing_users[0]["id"]
     }
     response = await client.post(f"/{api_version}/blogs/", json=payload)
 
-    assert response.status_code == 400
+    assert response.status_code == 201
     data = response.json()
-    assert re.search(error_regex, data["detail"])
-  
-  async def test_invalid_content_empty_list(
+    # Title is normalized via `(value or "").strip()` inside the Title VO.
+    assert data["title"] == title.strip()
+    assert data["status"] == "draft"
+    assert "id" in data
+
+  async def test_create_blog_persists_draft_with_empty_content(
     self,
     api_version,
     existing_users,
     create_existing_users,
     client: AsyncClient,
   ):
+    """Empty content list is allowed at create time. The empty-content
+    invariant fires only at publish."""
     payload = {
       "title": "Valid Title",
       "content": [],
@@ -80,6 +87,32 @@ class TestCreateBlogEndpoint:
     }
     response = await client.post(f"/{api_version}/blogs/", json=payload)
 
-    assert response.status_code == 400
+    assert response.status_code == 201
     data = response.json()
-    assert re.search(r"Content cannot be empty.", data["detail"])
+    assert data["content"] == []
+    assert data["status"] == "draft"
+
+  async def test_create_blog_persists_empty_draft(
+    self,
+    api_version,
+    existing_users,
+    create_existing_users,
+    client: AsyncClient,
+  ):
+    """Positive-path case the frontend's 'Write New Blog' relies on:
+    POST /blogs with empty title and empty content creates a draft and
+    returns 201 with the persisted draft body."""
+    payload = {
+      "title": "",
+      "content": [],
+      "author_id": existing_users[0]["id"]
+    }
+    response = await client.post(f"/{api_version}/blogs/", json=payload)
+
+    assert response.status_code == 201
+    data = response.json()
+    assert data["title"] == ""
+    assert data["content"] == []
+    assert data["status"] == "draft"
+    assert "id" in data
+    assert "created_at" in data

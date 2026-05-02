@@ -106,7 +106,13 @@ class BlogEntity:
     return self.__updated_at
 
   def publish(self) -> None:
-    """Publish the blog by copying current draft fields into the published snapshot."""
+    """Publish the blog by copying current draft fields into the published snapshot.
+
+    Drafts may carry empty/short title and empty content, but those are not
+    valid for a published blog — enforce the invariants here.
+    """
+    self.__title.validate_for_publish()
+    self.__content.validate_for_publish()
     self.__status = BlogStatus(BlogStatus.PUBLISHED)
     self.__published_title = self.__title.value
     self.__published_content = self.__content.value

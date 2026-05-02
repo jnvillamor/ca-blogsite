@@ -9,6 +9,8 @@ class Content:
   ):
     if not isinstance(value, list):
       raise InvalidDataException("Content must be a JSON array of block objects.")
-    if len(value) == 0:
-      raise InvalidDataException("Content cannot be empty.")
     self.value = value
+
+  def validate_for_publish(self) -> None:
+    if len(self.value) == 0:
+      raise InvalidDataException("Content cannot be empty.")

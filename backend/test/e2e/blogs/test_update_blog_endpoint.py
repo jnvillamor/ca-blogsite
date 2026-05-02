@@ -1,4 +1,3 @@
-import re
 import pytest
 
 
@@ -79,23 +78,26 @@ class TestUpdateBlogEndpoint:
 
   @pytest.mark.asyncio
   @pytest.mark.parametrize(
-    "title, error_regex",
+    "title",
     [
-      ("", r"Title cannot be empty."),
-      (" " * 10, r"Title cannot be empty."),
-      ("Shrt", r"Title must be at least 5 characters long."),
-      ("T" * 101, r"Title cannot exceed 100 characters.")
-    ]
+      "",
+      " " * 10,
+      "Shrt",
+      "T" * 101,
+    ],
+    ids=["empty", "whitespace_only", "too_short", "too_long"]
   )
-  async def test_update_blog_invalid_title(
+  async def test_update_blog_persists_publish_invalid_title(
     self,
     authenticated_client,
     api_version,
     existing_blogs,
     create_existing_blogs,
-    title,
-    error_regex
+    title
   ):
+    """The endpoint must accept titles that would fail publish-time
+    invariants. Validation moved to publish — exercised at the entity /
+    use-case layer."""
     existing_blog = existing_blogs[0]
 
     payload = {
@@ -109,20 +111,22 @@ class TestUpdateBlogEndpoint:
       json=payload
     )
 
-    assert response.status_code == 400
+    assert response.status_code == 200
     data = response.json()
-
-    assert re.search(error_regex, data["detail"])
+    # Title is normalized via `(value or "").strip()` inside the Title VO.
+    assert data["title"] == title.strip()
 
 
   @pytest.mark.asyncio
-  async def test_update_blog_invalid_content_empty_list(
+  async def test_update_blog_persists_empty_content(
     self,
     authenticated_client,
     api_version,
     existing_blogs,
     create_existing_blogs,
   ):
+    """Empty content list is allowed at update time. The empty-content
+    invariant fires only at publish."""
     existing_blog = existing_blogs[0]
 
     payload = {
@@ -136,10 +140,9 @@ class TestUpdateBlogEndpoint:
       json=payload
     )
 
-    assert response.status_code == 400
+    assert response.status_code == 200
     data = response.json()
-
-    assert re.search(r"Content cannot be empty.", data["detail"])
+    assert data["content"] == []
 
 
   @pytest.mark.asyncio

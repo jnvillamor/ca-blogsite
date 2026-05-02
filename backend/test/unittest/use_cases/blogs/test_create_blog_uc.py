@@ -116,46 +116,102 @@ class TestCreateBlogUseCase:
 
   @pytest.mark.asyncio
   @pytest.mark.parametrize(
-    "title, error_regex",
+    "title",
     [
-      ("", r"Title cannot be empty."),
-      (" " * 10, r"Title cannot be empty."),
-      ("Shrt", r"Title must be at least 5 characters long."),
-      ("T" * 101, r"Title cannot exceed 100 characters.")
-    ]
+      "",
+      " " * 10,
+      "Shrt",
+      "T" * 101,
+    ],
+    ids=["empty", "whitespace_only", "too_short", "too_long"]
   )
-  async def test_execute_invalid_title(
+  async def test_execute_accepts_invalid_publish_title_at_draft_time(
     self,
     create_blog_use_case,
     blog_data,
     unit_of_work,
+    id_generator,
     existing_user,
-    title,
-    error_regex
+    title
   ):
+    """Drafts may carry titles that would fail publish-time invariants
+    (empty, whitespace-only, too short, or too long). Create must not reject them.
+    The publish-time invariants are exercised in test_blog_entity.py and
+    test_publish_blog_uc.py.
+    """
     blog_data.title = title
 
     unit_of_work.users.get_user_by_id.return_value = existing_user
+    id_generator.generate.return_value = "blog-draft-1"
+    unit_of_work.blogs.create_blog.side_effect = lambda blog: blog
 
-    with pytest.raises(InvalidDataException, match=error_regex):
-      await create_blog_use_case.execute(blog_data)
+    result = await create_blog_use_case.execute(blog_data)
+
+    assert isinstance(result, BlogResponseDTO)
+    assert result.id == "blog-draft-1"
+    # Title is stored as-is after the value object's `(value or "").strip()` normalization.
+    assert result.title == title.strip()
+    assert result.status == "draft"
 
     unit_of_work.users.get_user_by_id.assert_awaited_once_with(blog_data.author_id)
+    unit_of_work.blogs.create_blog.assert_awaited_once()
 
 
   @pytest.mark.asyncio
-  async def test_execute_invalid_content_empty_list(
+  async def test_execute_accepts_empty_content_at_draft_time(
     self,
     create_blog_use_case,
     blog_data,
     unit_of_work,
+    id_generator,
     existing_user,
   ):
+    """Drafts may have an empty content list. The empty-content invariant only
+    fires at publish time."""
     blog_data.content = []
 
     unit_of_work.users.get_user_by_id.return_value = existing_user
+    id_generator.generate.return_value = "blog-draft-2"
+    unit_of_work.blogs.create_blog.side_effect = lambda blog: blog
 
-    with pytest.raises(InvalidDataException, match=r"Content cannot be empty."):
-      await create_blog_use_case.execute(blog_data)
+    result = await create_blog_use_case.execute(blog_data)
+
+    assert isinstance(result, BlogResponseDTO)
+    assert result.id == "blog-draft-2"
+    assert result.content == []
+    assert result.status == "draft"
 
     unit_of_work.users.get_user_by_id.assert_awaited_once_with(blog_data.author_id)
+    unit_of_work.blogs.create_blog.assert_awaited_once()
+
+
+  @pytest.mark.asyncio
+  async def test_execute_creates_empty_draft(
+    self,
+    create_blog_use_case,
+    blog_data,
+    unit_of_work,
+    id_generator,
+    existing_user,
+  ):
+    """Positive-path case the frontend relies on: clicking 'Write New Blog'
+    creates a brand-new draft with empty title and empty content."""
+    blog_data.title = ""
+    blog_data.content = []
+
+    unit_of_work.users.get_user_by_id.return_value = existing_user
+    id_generator.generate.return_value = "blog-empty-draft"
+    unit_of_work.blogs.create_blog.side_effect = lambda blog: blog
+
+    result = await create_blog_use_case.execute(blog_data)
+
+    assert isinstance(result, BlogResponseDTO)
+    assert result.id == "blog-empty-draft"
+    assert result.title == ""
+    assert result.content == []
+    assert result.status == "draft"
+    assert result.published_title is None
+    assert result.published_content is None
+    assert result.published_at is None
+
+    unit_of_work.blogs.create_blog.assert_awaited_once()

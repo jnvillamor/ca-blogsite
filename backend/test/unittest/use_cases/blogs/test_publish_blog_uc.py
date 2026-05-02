@@ -5,7 +5,11 @@ from unittest.mock import AsyncMock
 from src.application.dto import BlogResponseDTO
 from src.application.use_cases.blogs import PublishBlogUseCase
 from src.domain.entities import BlogEntity, UserEntity
-from src.domain.exceptions import NotFoundException, UnauthorizedException
+from src.domain.exceptions import (
+  InvalidDataException,
+  NotFoundException,
+  UnauthorizedException
+)
 
 
 @pytest.fixture
@@ -134,6 +138,76 @@ class TestPublishBlogUseCase:
       )
 
     assert str(exc_info.value) == "You are not authorized to publish this blog."
+
+    unit_of_work.blogs.get_blog_by_id.assert_awaited_once_with("blog-123")
+    unit_of_work.blogs.update_blog.assert_not_called()
+
+
+  @pytest.mark.asyncio
+  @pytest.mark.parametrize(
+    "title, error_regex",
+    [
+      ("", r"Title cannot be empty."),
+      (" " * 10, r"Title cannot be empty."),
+      ("Shrt", r"Title must be at least 5 characters long."),
+      ("T" * 101, r"Title cannot exceed 100 characters.")
+    ],
+    ids=["empty", "whitespace_only", "too_short", "too_long"]
+  )
+  async def test_execute_rejects_invalid_title_at_publish_time(
+    self,
+    publish_blog_use_case,
+    unit_of_work,
+    existing_user,
+    title,
+    error_regex
+  ):
+    """Drafts may carry these titles; publish must reject them."""
+    invalid_draft = BlogEntity(
+      id="blog-123",
+      title=title,
+      content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Some content.", "styles": {}}], "children": []}],
+      author_id="author-123",
+      status="draft",
+      created_at=datetime(2024, 1, 1, tzinfo=timezone.utc),
+      updated_at=datetime(2024, 1, 1, tzinfo=timezone.utc)
+    )
+    unit_of_work.blogs.get_blog_by_id.return_value = invalid_draft
+
+    with pytest.raises(InvalidDataException, match=error_regex):
+      await publish_blog_use_case.execute(
+        current_user=existing_user,
+        blog_id="blog-123"
+      )
+
+    unit_of_work.blogs.get_blog_by_id.assert_awaited_once_with("blog-123")
+    unit_of_work.blogs.update_blog.assert_not_called()
+
+
+  @pytest.mark.asyncio
+  async def test_execute_rejects_empty_content_at_publish_time(
+    self,
+    publish_blog_use_case,
+    unit_of_work,
+    existing_user
+  ):
+    """A draft with empty content list must not be publishable."""
+    empty_content_draft = BlogEntity(
+      id="blog-123",
+      title="A Valid Title",
+      content=[],
+      author_id="author-123",
+      status="draft",
+      created_at=datetime(2024, 1, 1, tzinfo=timezone.utc),
+      updated_at=datetime(2024, 1, 1, tzinfo=timezone.utc)
+    )
+    unit_of_work.blogs.get_blog_by_id.return_value = empty_content_draft
+
+    with pytest.raises(InvalidDataException, match=r"Content cannot be empty."):
+      await publish_blog_use_case.execute(
+        current_user=existing_user,
+        blog_id="blog-123"
+      )
 
     unit_of_work.blogs.get_blog_by_id.assert_awaited_once_with("blog-123")
     unit_of_work.blogs.update_blog.assert_not_called()

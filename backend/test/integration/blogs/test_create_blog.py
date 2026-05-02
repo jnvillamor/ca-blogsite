@@ -6,7 +6,6 @@ from src.application.use_cases.blogs import CreateBlogUseCase
 from src.domain.exceptions import InvalidDataException
 
 import pytest
-import re
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -71,56 +70,92 @@ class TestCreateBlogUseCase:
 
   @pytest.mark.asyncio
   @pytest.mark.parametrize(
-    "title, error_regex",
+    "title",
     [
-      ("", r"Title cannot be empty."),
-      (" " * 10, r"Title cannot be empty."),
-      ("Shrt", r"Title must be at least 5 characters long."),
-      ("T" * 101, r"Title cannot exceed 100 characters.")
-    ]
+      "",
+      " " * 10,
+      "Shrt",
+      "T" * 101,
+    ],
+    ids=["empty", "whitespace_only", "too_short", "too_long"]
   )
-  async def test_create_blog_invalid_title(
+  async def test_create_blog_persists_draft_with_publish_invalid_title(
     self,
     db_session: AsyncSession,
     create_test_user,
     create_blog_use_case: CreateBlogUseCase,
-    title,
-    error_regex
+    title
   ):
+    """Drafts may carry titles that would be rejected at publish time.
+    Create must accept and persist them. Publish-time invariants are tested
+    in test_blog_entity.py / test_publish_blog_uc.py."""
     test_user = await create_test_user()
     author_id = test_user.id
 
     blog_data = CreateBlogDTO(
       title=title,
-      content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Valid content for testing invalid title.", "styles": {}}], "children": []}],
+      content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Valid content for draft.", "styles": {}}], "children": []}],
       author_id=author_id
     )
 
-    with pytest.raises(Exception, match=error_regex) as exc_info:
-      await create_blog_use_case.execute(blog_data)
+    created_blog = await create_blog_use_case.execute(blog_data)
 
-    assert isinstance(exc_info.value, Exception)
-    assert re.search(error_regex, str(exc_info.value)) is not None
+    # Title is normalized via `(value or "").strip()` inside Title.__init__.
+    assert created_blog.title == title.strip()
+    assert created_blog.status == "draft"
+    assert created_blog.published_at is None
 
 
   @pytest.mark.asyncio
-  async def test_create_blog_invalid_content_empty_list(
+  async def test_create_blog_persists_draft_with_empty_content(
     self,
     db_session: AsyncSession,
     create_test_user,
     create_blog_use_case: CreateBlogUseCase,
   ):
+    """Drafts may have an empty content list. Create must accept and persist."""
     test_user = await create_test_user()
     author_id = test_user.id
 
     blog_data = CreateBlogDTO(
-      title="Valid Title for Testing Invalid Content",
+      title="Valid Title for Empty Content Draft",
       content=[],
       author_id=author_id
     )
 
-    with pytest.raises(Exception, match=r"Content cannot be empty.") as exc_info:
-      await create_blog_use_case.execute(blog_data)
+    created_blog = await create_blog_use_case.execute(blog_data)
 
-    assert isinstance(exc_info.value, Exception)
-    assert re.search(r"Content cannot be empty.", str(exc_info.value)) is not None
+    assert created_blog.content == []
+    assert created_blog.status == "draft"
+    assert created_blog.published_at is None
+
+
+  @pytest.mark.asyncio
+  async def test_create_blog_persists_empty_draft(
+    self,
+    db_session: AsyncSession,
+    create_test_user,
+    create_blog_use_case: CreateBlogUseCase,
+  ):
+    """Positive-path case the frontend's 'Write New Blog' relies on:
+    a brand-new draft can be created with both empty title and empty content,
+    and it is persisted as a draft."""
+    test_user = await create_test_user()
+    author_id = test_user.id
+
+    blog_data = CreateBlogDTO(
+      title="",
+      content=[],
+      author_id=author_id
+    )
+
+    created_blog = await create_blog_use_case.execute(blog_data)
+
+    assert created_blog.id is not None
+    assert created_blog.title == ""
+    assert created_blog.content == []
+    assert created_blog.author_id == author_id
+    assert created_blog.status == "draft"
+    assert created_blog.published_title is None
+    assert created_blog.published_content is None
+    assert created_blog.published_at is None

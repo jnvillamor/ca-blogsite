@@ -75,22 +75,26 @@ class TestUpdateBlogUseCase:
 
   @pytest.mark.asyncio
   @pytest.mark.parametrize(
-    "field, invalid_value, error_regex",
+    "field, invalid_value, expected_value",
     [
-      ("title", "", r"Title cannot be empty"),
-      ("title", "A" * 101, r"Title cannot exceed \d+ characters"),
-      ("content", [], r"Content cannot be empty"),
-    ]
+      ("title", "", ""),
+      ("title", "A" * 101, "A" * 101),
+      ("content", [], []),
+    ],
+    ids=["empty_title", "too_long_title", "empty_content"]
   )
-  async def test_update_blog_validation_errors(
+  async def test_update_blog_persists_publish_invalid_values_on_draft(
     self,
     update_blog_use_case: UpdateBlogUseCase,
     create_test_user: Callable[..., Awaitable[UserModel]],
     create_test_blog: Callable[..., Awaitable[BlogModel]],
     field: str,
     invalid_value,
-    error_regex: str
+    expected_value
   ):
+    """Updating a draft must accept values that would fail publish-time
+    invariants (empty title, too-long title, empty content). Validation
+    moved to publish — exercised in test_blog_entity.py and test_publish_blog_uc.py."""
     test_user = await create_test_user()
     author_id = test_user.id
 
@@ -106,12 +110,14 @@ class TestUpdateBlogUseCase:
     update_data[field] = invalid_value
     update_dto = UpdateBlogDTO(**update_data)
 
-    with pytest.raises(Exception, match=error_regex):
-      await update_blog_use_case.execute(
-        current_user=test_user,
-        blog_id=blog_id,
-        blog_data=update_dto
-      )
+    updated_blog = await update_blog_use_case.execute(
+      current_user=test_user,
+      blog_id=blog_id,
+      blog_data=update_dto
+    )
+
+    assert getattr(updated_blog, field) == expected_value
+    assert updated_blog.status == "draft"
 
 
   @pytest.mark.asyncio

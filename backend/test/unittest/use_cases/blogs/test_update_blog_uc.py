@@ -135,6 +135,73 @@ class TestUpdateBlogUseCase:
 
 
   @pytest.mark.asyncio
+  @pytest.mark.parametrize(
+    "title",
+    [
+      "",
+      " " * 10,
+      "Shrt",
+      "T" * 101,
+    ],
+    ids=["empty", "whitespace_only", "too_short", "too_long"]
+  )
+  async def test_update_blog_accepts_invalid_publish_title_at_draft_time(
+    self,
+    update_blog_use_case,
+    unit_of_work,
+    blog_data,
+    existing_user,
+    title
+  ):
+    """Updating a draft must allow titles that would fail publish-time invariants
+    (empty, whitespace-only, too short, too long). Validation moved to publish."""
+    unit_of_work.blogs.get_blog_by_id.return_value = blog_data
+    unit_of_work.blogs.update_blog.side_effect = lambda blog_id, blog: blog
+
+    update_data = UpdateBlogDTO(title=title)
+
+    result = await update_blog_use_case.execute(
+      current_user=existing_user,
+      blog_id=blog_data.id,
+      blog_data=update_data
+    )
+
+    # Title is normalized via `(value or "").strip()` inside Title.__init__.
+    assert result.title == title.strip()
+    assert result.status == "draft"
+
+    unit_of_work.blogs.get_blog_by_id.assert_awaited_once_with(blog_data.id)
+    unit_of_work.blogs.update_blog.assert_awaited_once()
+
+
+  @pytest.mark.asyncio
+  async def test_update_blog_accepts_empty_content_at_draft_time(
+    self,
+    update_blog_use_case,
+    unit_of_work,
+    blog_data,
+    existing_user
+  ):
+    """Updating a draft must allow an empty content list. Empty-content is a
+    publish-time invariant only."""
+    unit_of_work.blogs.get_blog_by_id.return_value = blog_data
+    unit_of_work.blogs.update_blog.side_effect = lambda blog_id, blog: blog
+
+    update_data = UpdateBlogDTO(content=[])
+
+    result = await update_blog_use_case.execute(
+      current_user=existing_user,
+      blog_id=blog_data.id,
+      blog_data=update_data
+    )
+
+    assert result.content == []
+    assert result.status == "draft"
+
+    unit_of_work.blogs.update_blog.assert_awaited_once()
+
+
+  @pytest.mark.asyncio
   async def test_execute_unauthorized(
     self,
     update_blog_use_case,

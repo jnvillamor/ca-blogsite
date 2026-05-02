@@ -62,10 +62,10 @@ async def create_blog(
 @router.get(
   "/",
   status_code=status.HTTP_200_OK,
-  response_model=PaginationResponseDTO[BlogResponseDTO],
+  response_model=PaginationResponseDTO[PublicBlogResponseDTO],
   response_model_exclude_none=True,
   responses={
-    200: {"description": "Blogs retrieved successfully."},
+    200: {"description": "Public blogs retrieved successfully."},
     400: {"description": "Bad Request."},
     500: {"description": "Internal Server Error."}
   }
@@ -75,43 +75,15 @@ async def list_blogs(
   pagination: PaginationDTO = Depends(),
   session: AsyncSession = Depends(get_db)
 ):
-  logger.info(f"Listing blogs with pagination: skip: {pagination.skip}, limit: {pagination.limit}")
+  logger.info(f"Listing public blogs with pagination: skip: {pagination.skip}, limit: {pagination.limit}")
   blog_repository = BlogRepository(session)
   use_case = GetBlogUseCase(blog_repository)
-  result = await use_case.get_all_blogs(pagination)
-  logger.info(f"Number of blogs retrieved: {len(result.items)}")
+  result = await use_case.get_all_public_blogs(pagination)
+  logger.info(f"Number of public blogs retrieved: {len(result.items)}")
   return result
 
 @router.get(
   "/author/{author_id}",
-  status_code=status.HTTP_200_OK,
-  response_model=PaginationResponseDTO[BlogResponseDTO],
-  response_model_exclude_none=True,
-  responses={
-    200: {"description": "Blogs by author retrieved successfully."},
-    400: {"description": "Bad Request."},
-    500: {"description": "Internal Server Error."}
-  }
-)
-@router.get(
-  "/author/{author_id}/",
-  include_in_schema=False
-)
-async def get_blogs_by_author(
-  request: Request,
-  author_id: str,
-  pagination: PaginationDTO = Depends(),
-  session: AsyncSession = Depends(get_db)
-):
-  logger.info(f"Fetching blogs for author_id: {author_id} with pagination: skip: {pagination.skip}, limit: {pagination.limit}")
-  blog_repository = BlogRepository(session)
-  use_case = GetBlogUseCase(blog_repository)
-  result = await use_case.get_all_blogs_by_author(author_id, pagination)
-  logger.info(f"Number of blogs fetched for author_id '{author_id}': {len(result.items)}")
-  return result
-
-@router.get(
-  "/author/{author_id}/public",
   status_code=status.HTTP_200_OK,
   response_model=PaginationResponseDTO[PublicBlogResponseDTO],
   response_model_exclude_none=True,
@@ -122,7 +94,7 @@ async def get_blogs_by_author(
   }
 )
 @router.get(
-  "/author/{author_id}/public/",
+  "/author/{author_id}/",
   include_in_schema=False
 )
 async def get_public_blogs_by_author(
@@ -137,39 +109,6 @@ async def get_public_blogs_by_author(
   result = await use_case.get_all_public_blogs_by_author(author_id, pagination)
   logger.info(f"Number of public blogs fetched for author_id '{author_id}': {len(result.items)}")
   return result
-
-@router.get(
-  "/{blog_id}/public",
-  status_code=status.HTTP_200_OK,
-  response_model=PublicBlogResponseDTO,
-  response_model_exclude_none=True,
-  responses={
-    200: {"description": "Public blog retrieved successfully."},
-    404: {"description": "Blog not found."},
-    500: {"description": "Internal Server Error."}
-  }
-)
-@router.get(
-  "/{blog_id}/public/",
-  include_in_schema=False
-)
-async def get_public_blog(
-  request: Request,
-  blog_id: str,
-  session: AsyncSession = Depends(get_db)
-):
-  logger.info(f"Fetching public view of blog with id: {blog_id}")
-  blog_repository = BlogRepository(session)
-  use_case = GetBlogUseCase(blog_repository)
-  blog = await use_case.get_public_by_id(blog_id)
-  if blog is None:
-    logger.warning(f"Blog with id: {blog_id} not found.")
-    return JSONResponse(
-      status_code=status.HTTP_404_NOT_FOUND,
-      content={"detail": f"Blog with id '{blog_id}' not found."}
-    )
-  logger.info(f"Public blog fetched: {blog.title} (id: {blog.id})")
-  return blog
 
 @router.post(
   "/{blog_id}/publish",
@@ -203,11 +142,11 @@ async def publish_blog(
 @router.get(
   "/{blog_id}",
   status_code=status.HTTP_200_OK,
-  response_model=BlogResponseDTO,
+  response_model=PublicBlogResponseDTO,
   response_model_exclude_none=True,
   responses={
-    200: {"description": "Blog retrieved successfully."},
-    404: {"description": "Blog not found."},
+    200: {"description": "Public blog retrieved successfully."},
+    404: {"description": "Blog not found or not published."},
     500: {"description": "Internal Server Error."}
   }
 )
@@ -215,22 +154,22 @@ async def publish_blog(
   "/{blog_id}/",
   include_in_schema=False
 )
-async def get_blog(
+async def get_public_blog(
   request: Request,
   blog_id: str,
   session: AsyncSession = Depends(get_db)
 ):
-  logger.info(f"Fetching blog with id: {blog_id}")
+  logger.info(f"Fetching public view of blog with id: {blog_id}")
   blog_repository = BlogRepository(session)
   use_case = GetBlogUseCase(blog_repository)
-  blog = await use_case.get_by_id(blog_id)
+  blog = await use_case.get_public_by_id(blog_id)
   if blog is None:
-    logger.warning(f"Blog with id: {blog_id} not found.")
+    logger.warning(f"Public blog with id: {blog_id} not found or not published.")
     return JSONResponse(
       status_code=status.HTTP_404_NOT_FOUND,
       content={"detail": f"Blog with id '{blog_id}' not found."}
     )
-  logger.info(f"Blog fetched: {blog.title} (id: {blog.id})")
+  logger.info(f"Public blog fetched: {blog.title} (id: {blog.id})")
   return blog
 
 @router.put(

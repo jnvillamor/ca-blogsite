@@ -28,13 +28,13 @@ class IBlogRepository(ABC):
     pass
 
   @abstractmethod
-  async def get_all_blogs(
+  async def get_all_public_blogs(
     self,
     skip: int = 0,
     limit: int = 10,
     search: Optional[str] = None
   ) -> Tuple[List[BlogEntity], int]:
-    """Retrieve all blogs with pagination and optional search.
+    """Retrieve all published blogs with pagination and optional search.
 
     Args:
       skip (int, optional): Number of records to skip. Defaults to 0.
@@ -42,7 +42,7 @@ class IBlogRepository(ABC):
       search (Optional[str], optional): Search term for filtering blogs. Defaults to None.
 
     Returns:
-      Tuple[List[BlogEntity], int]: A tuple containing the list of blog entities and the total count.
+      Tuple[List[BlogEntity], int]: A tuple containing the list of published blog entities and the total count.
     """
     pass
 

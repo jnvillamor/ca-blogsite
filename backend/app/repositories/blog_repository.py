@@ -35,14 +35,14 @@ class BlogRepository(IBlogRepository):
     return None
 
 
-  async def get_all_blogs(
+  async def get_all_public_blogs(
     self,
     skip: int = 0,
     limit: int = 10,
     search: Optional[str] = None
   ) -> Tuple[List[BlogEntity], int]:
 
-    stmt = select(BlogModel)
+    stmt = select(BlogModel).where(BlogModel.published_at.is_not(None))
 
     if search:
       stmt = stmt.where(BlogModel.title.ilike(f"%{search}%"))

@@ -9,21 +9,23 @@ from app.database.unit_of_work import get_uow
 from app.repositories import UserRepository, BlogRepository
 from app.services import PasswordHasher, UuidGenerator
 from src.application.dto import (
-  CreateUserDTO, 
+  CreateUserDTO,
   UpdateUserDTO,
   ChangePasswordDTO,
   UserResponseDTO,
+  BlogResponseDTO,
   PaginationDTO,
   PaginationResponseDTO,
   UserIncludeOptions
 )
 from src.application.use_cases.users import (
-  CreateUserUseCase, 
+  CreateUserUseCase,
   GetUserUseCase,
   UpdateUserUseCase,
   ChangePasswordUseCase,
   DeleteUserUseCase
 )
+from src.application.use_cases.blogs import GetBlogUseCase
 from src.domain.entities import UserEntity
 
 logger = logging.getLogger(__name__)
@@ -90,6 +92,69 @@ async def get_users(
   result = await use_case.get_all_users(pagination, include_options)
   logger.info(f"Number of users fetched: {len(result.items)}")
   return result
+
+@router.get(
+  "/me/blogs",
+  status_code=status.HTTP_200_OK,
+  response_model=PaginationResponseDTO[BlogResponseDTO],
+  response_model_exclude_none=True,
+  responses={
+    200: {"description": "Owner blogs retrieved successfully."},
+    401: {"description": "Not authenticated."},
+    500: {"description": "Internal Server Error."}
+  }
+)
+@router.get(
+  "/me/blogs/",
+  include_in_schema=False
+)
+async def list_my_blogs(
+  request: Request,
+  pagination: PaginationDTO = Depends(),
+  session: AsyncSession = Depends(get_db),
+  current_user: UserEntity = Depends(get_current_user)
+):
+  logger.info(f"Listing blogs for current_user_id: {current_user.id} with pagination: skip: {pagination.skip}, limit: {pagination.limit}")
+  blog_repo = BlogRepository(session)
+  use_case = GetBlogUseCase(blog_repo)
+  result = await use_case.get_all_blogs_for_owner(current_user, pagination)
+  logger.info(f"Number of blogs fetched for current_user_id '{current_user.id}': {len(result.items)}")
+  return result
+
+@router.get(
+  "/me/blogs/{blog_id}",
+  status_code=status.HTTP_200_OK,
+  response_model=BlogResponseDTO,
+  response_model_exclude_none=True,
+  responses={
+    200: {"description": "Owner blog retrieved successfully."},
+    401: {"description": "Not authenticated."},
+    404: {"description": "Blog not found."},
+    500: {"description": "Internal Server Error."}
+  }
+)
+@router.get(
+  "/me/blogs/{blog_id}/",
+  include_in_schema=False
+)
+async def get_my_blog(
+  request: Request,
+  blog_id: str,
+  session: AsyncSession = Depends(get_db),
+  current_user: UserEntity = Depends(get_current_user)
+):
+  logger.info(f"Fetching owner view of blog with id: {blog_id} for current_user_id: {current_user.id}")
+  blog_repo = BlogRepository(session)
+  use_case = GetBlogUseCase(blog_repo)
+  blog = await use_case.get_owner_by_id(current_user, blog_id)
+  if blog is None:
+    logger.warning(f"Owner blog with id: {blog_id} not found for current_user_id: {current_user.id}.")
+    return JSONResponse(
+      status_code=status.HTTP_404_NOT_FOUND,
+      content={"detail": f"Blog with id '{blog_id}' not found."}
+    )
+  logger.info(f"Owner blog fetched: {blog.title} (id: {blog.id})")
+  return blog
 
 @router.get(
   "/{user_id}",

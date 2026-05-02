@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/common/components/ui/card'
 import ProfileBlogItem from './profile-blog-item'
 import ProfileBlogActions from './profile-blog-actions'
 import NewBlogButton from './new-blog-button'
+import ProfileBlogsListSkeleton from './profile-blogs-list-skeleton'
 
 type ProfileBlogsListProps = {
   user_id: string
@@ -25,7 +26,7 @@ const ProfileBlogsList = ({
   )
 
   if (status === 'loading') {
-    return <div>Loading blogs...</div>
+    return <ProfileBlogsListSkeleton />
   }
 
   if (status === 'error') {

@@ -4,21 +4,39 @@ from unittest.mock import AsyncMock
 
 from src.application.dto import PaginationDTO, BlogResponseDTO, PublicBlogResponseDTO, PaginationResponseDTO
 from src.application.use_cases.blogs import GetBlogUseCase
-from src.domain.entities import BlogEntity
+from src.domain.entities import BlogEntity, UserEntity
 
 
 class TestGetBlogUseCase:
+  """Owner-facing methods: get_owner_by_id and get_all_blogs_for_owner.
+
+  These methods return raw draft fields (not the published snapshot) so the
+  owner can see in-progress edits on any blog they own (regardless of status).
+  """
 
   @pytest.fixture
   def blog_repository(self, mocker):
     repo = mocker.Mock()
     repo.get_blog_by_id = AsyncMock()
-    repo.get_all_blogs = AsyncMock()
+    repo.get_all_blogs_by_author = AsyncMock()
     return repo
 
   @pytest.fixture
   def use_case(self, blog_repository) -> GetBlogUseCase:
     return GetBlogUseCase(blog_repository=blog_repository)
+
+  @pytest.fixture
+  def current_user(self) -> UserEntity:
+    return UserEntity(
+      id="author-123",
+      first_name="Jane",
+      last_name="Doe",
+      username="janedoe",
+      password="hashed-password",
+      avatar="https://example.com/avatar.png",
+      created_at=datetime(2024, 1, 1, tzinfo=timezone.utc),
+      updated_at=datetime(2024, 1, 1, tzinfo=timezone.utc)
+    )
 
   @pytest.fixture
   def valid_blog_data(self) -> BlogEntity:
@@ -46,7 +64,7 @@ class TestGetBlogUseCase:
         id="blog-124",
         title="Test Blog 2",
         content=[{"id": "2", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "This is the second test blog content.", "styles": {}}], "children": []}],
-        author_id="author-124",
+        author_id="author-123",
         created_at=datetime(2024, 1, 2, tzinfo=timezone.utc),
         updated_at=datetime(2024, 1, 2, tzinfo=timezone.utc)
       )
@@ -54,49 +72,76 @@ class TestGetBlogUseCase:
 
 
   @pytest.mark.asyncio
-  async def test_get_by_id_success(
+  async def test_get_owner_by_id_success(
     self,
     use_case,
     blog_repository,
-    valid_blog_data
+    valid_blog_data,
+    current_user
   ):
     blog_repository.get_blog_by_id.return_value = valid_blog_data
 
-    result = await use_case.get_by_id("blog-123")
+    result = await use_case.get_owner_by_id(current_user, "blog-123")
 
     assert result == BlogResponseDTO.model_validate(valid_blog_data.to_dict())
     blog_repository.get_blog_by_id.assert_awaited_once_with("blog-123")
 
 
   @pytest.mark.asyncio
-  async def test_get_by_id_not_found(
+  async def test_get_owner_by_id_not_found(
     self,
     use_case,
-    blog_repository
+    blog_repository,
+    current_user
   ):
     blog_repository.get_blog_by_id.return_value = None
 
-    result = await use_case.get_by_id("non-existing-blog-id")
+    result = await use_case.get_owner_by_id(current_user, "non-existing-blog-id")
 
     assert result is None
     blog_repository.get_blog_by_id.assert_awaited_once_with("non-existing-blog-id")
 
 
   @pytest.mark.asyncio
-  async def test_get_all_blogs(
+  async def test_get_owner_by_id_returns_none_when_blog_belongs_to_another_user(
     self,
     use_case,
     blog_repository,
-    valid_blogs_list
+    current_user
+  ):
+    """Owner method must not leak existence of blogs the caller does not own."""
+    other_user_blog = BlogEntity(
+      id="blog-999",
+      title="Someone else's blog",
+      content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Other.", "styles": {}}], "children": []}],
+      author_id="other-author",
+      created_at=datetime(2024, 1, 1, tzinfo=timezone.utc),
+      updated_at=datetime(2024, 1, 1, tzinfo=timezone.utc)
+    )
+    blog_repository.get_blog_by_id.return_value = other_user_blog
+
+    result = await use_case.get_owner_by_id(current_user, "blog-999")
+
+    assert result is None
+    blog_repository.get_blog_by_id.assert_awaited_once_with("blog-999")
+
+
+  @pytest.mark.asyncio
+  async def test_get_all_blogs_for_owner(
+    self,
+    use_case,
+    blog_repository,
+    valid_blogs_list,
+    current_user
   ):
     pagination = PaginationDTO(skip=0, limit=10, search=None)
 
-    blog_repository.get_all_blogs.return_value = (
+    blog_repository.get_all_blogs_by_author.return_value = (
       valid_blogs_list,
       len(valid_blogs_list)
     )
 
-    result = await use_case.get_all_blogs(pagination)
+    result = await use_case.get_all_blogs_for_owner(current_user, pagination)
 
     expected_response = PaginationResponseDTO(
       items=[BlogResponseDTO.model_validate(blog.to_dict()) for blog in valid_blogs_list],
@@ -107,7 +152,8 @@ class TestGetBlogUseCase:
 
     assert result == expected_response
 
-    blog_repository.get_all_blogs.assert_awaited_once_with(
+    blog_repository.get_all_blogs_by_author.assert_awaited_once_with(
+      author_id=current_user.id,
       skip=pagination.skip,
       limit=pagination.limit,
       search=pagination.search
@@ -115,16 +161,17 @@ class TestGetBlogUseCase:
 
 
   @pytest.mark.asyncio
-  async def test_get_all_blogs_empty(
+  async def test_get_all_blogs_for_owner_empty(
     self,
     use_case,
-    blog_repository
+    blog_repository,
+    current_user
   ):
     pagination = PaginationDTO(skip=0, limit=10, search=None)
 
-    blog_repository.get_all_blogs.return_value = ([], 0)
+    blog_repository.get_all_blogs_by_author.return_value = ([], 0)
 
-    result = await use_case.get_all_blogs(pagination)
+    result = await use_case.get_all_blogs_for_owner(current_user, pagination)
 
     expected_response = PaginationResponseDTO(
       items=[],
@@ -135,7 +182,8 @@ class TestGetBlogUseCase:
 
     assert result == expected_response
 
-    blog_repository.get_all_blogs.assert_awaited_once_with(
+    blog_repository.get_all_blogs_by_author.assert_awaited_once_with(
+      author_id=current_user.id,
       skip=pagination.skip,
       limit=pagination.limit,
       search=pagination.search
@@ -143,11 +191,12 @@ class TestGetBlogUseCase:
 
 
   @pytest.mark.asyncio
-  async def test_get_all_blogs_with_search(
+  async def test_get_all_blogs_for_owner_with_search(
     self,
     use_case,
     blog_repository,
-    valid_blogs_list
+    valid_blogs_list,
+    current_user
   ):
     search_query = "Test Blog 1"
 
@@ -158,12 +207,12 @@ class TestGetBlogUseCase:
       if search_query in blog.title
     ]
 
-    blog_repository.get_all_blogs.return_value = (
+    blog_repository.get_all_blogs_by_author.return_value = (
       filtered_blogs,
       len(filtered_blogs)
     )
 
-    result = await use_case.get_all_blogs(pagination)
+    result = await use_case.get_all_blogs_for_owner(current_user, pagination)
 
     expected_response = PaginationResponseDTO(
       items=[BlogResponseDTO.model_validate(blog.to_dict()) for blog in filtered_blogs],
@@ -174,7 +223,8 @@ class TestGetBlogUseCase:
 
     assert result == expected_response
 
-    blog_repository.get_all_blogs.assert_awaited_once_with(
+    blog_repository.get_all_blogs_by_author.assert_awaited_once_with(
+      author_id=current_user.id,
       skip=pagination.skip,
       limit=pagination.limit,
       search=pagination.search
@@ -190,8 +240,34 @@ class TestGetPublicBlogById:
     return repo
 
   @pytest.fixture
-  def use_case(self, blog_repository) -> GetBlogUseCase:
+  def user_repository(self, mocker):
+    repo = mocker.Mock()
+    repo.get_user_by_id = AsyncMock()
+    return repo
+
+  @pytest.fixture
+  def use_case(self, blog_repository, user_repository) -> GetBlogUseCase:
+    return GetBlogUseCase(
+      blog_repository=blog_repository,
+      user_repository=user_repository
+    )
+
+  @pytest.fixture
+  def use_case_without_user_repo(self, blog_repository) -> GetBlogUseCase:
     return GetBlogUseCase(blog_repository=blog_repository)
+
+  @pytest.fixture
+  def author_user(self) -> UserEntity:
+    return UserEntity(
+      id="author-123",
+      first_name="Jane",
+      last_name="Doe",
+      username="janedoe",
+      password="hashed-password",
+      avatar="https://example.com/avatar.png",
+      created_at=datetime(2024, 1, 1, tzinfo=timezone.utc),
+      updated_at=datetime(2024, 1, 1, tzinfo=timezone.utc)
+    )
 
   @pytest.fixture
   def published_blog(self) -> BlogEntity:
@@ -227,9 +303,12 @@ class TestGetPublicBlogById:
     self,
     use_case,
     blog_repository,
-    published_blog
+    user_repository,
+    published_blog,
+    author_user
   ):
     blog_repository.get_blog_by_id.return_value = published_blog
+    user_repository.get_user_by_id.return_value = author_user
 
     result = await use_case.get_public_by_id("blog-123")
 
@@ -242,29 +321,28 @@ class TestGetPublicBlogById:
 
 
   @pytest.mark.asyncio
-  async def test_get_public_by_id_draft_serves_draft_content(
+  async def test_get_public_by_id_draft_returns_none(
     self,
     use_case,
     blog_repository,
+    user_repository,
     draft_blog
   ):
     blog_repository.get_blog_by_id.return_value = draft_blog
 
     result = await use_case.get_public_by_id("blog-456")
 
-    assert isinstance(result, PublicBlogResponseDTO)
-    assert result.title == "Draft Only Title"
-    assert result.content == [{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Draft only content.", "styles": {}}], "children": []}]
-    assert result.status == "draft"
-    assert result.published_at is None
+    assert result is None
     blog_repository.get_blog_by_id.assert_awaited_once_with("blog-456")
+    user_repository.get_user_by_id.assert_not_awaited()
 
 
   @pytest.mark.asyncio
   async def test_get_public_by_id_not_found(
     self,
     use_case,
-    blog_repository
+    blog_repository,
+    user_repository
   ):
     blog_repository.get_blog_by_id.return_value = None
 
@@ -272,6 +350,64 @@ class TestGetPublicBlogById:
 
     assert result is None
     blog_repository.get_blog_by_id.assert_awaited_once_with("nonexistent-blog")
+    user_repository.get_user_by_id.assert_not_awaited()
+
+
+  @pytest.mark.asyncio
+  async def test_get_public_by_id_attaches_author_when_user_repository_provided(
+    self,
+    use_case,
+    blog_repository,
+    user_repository,
+    published_blog,
+    author_user
+  ):
+    blog_repository.get_blog_by_id.return_value = published_blog
+    user_repository.get_user_by_id.return_value = author_user
+
+    result = await use_case.get_public_by_id("blog-123")
+
+    assert result is not None
+    assert result.author is not None
+    assert result.author.id == author_user.id
+    assert result.author.first_name == author_user.first_name
+    assert result.author.last_name == author_user.last_name
+    assert result.author.username == author_user.username
+    assert result.author.avatar == author_user.avatar
+    user_repository.get_user_by_id.assert_awaited_once_with(published_blog.author_id)
+
+
+  @pytest.mark.asyncio
+  async def test_get_public_by_id_omits_author_when_user_not_found(
+    self,
+    use_case,
+    blog_repository,
+    user_repository,
+    published_blog
+  ):
+    blog_repository.get_blog_by_id.return_value = published_blog
+    user_repository.get_user_by_id.return_value = None
+
+    result = await use_case.get_public_by_id("blog-123")
+
+    assert result is not None
+    assert result.author is None
+    user_repository.get_user_by_id.assert_awaited_once_with(published_blog.author_id)
+
+
+  @pytest.mark.asyncio
+  async def test_get_public_by_id_skips_author_lookup_when_user_repository_not_provided(
+    self,
+    use_case_without_user_repo,
+    blog_repository,
+    published_blog
+  ):
+    blog_repository.get_blog_by_id.return_value = published_blog
+
+    result = await use_case_without_user_repo.get_public_by_id("blog-123")
+
+    assert result is not None
+    assert result.author is None
 
 
 class TestGetAllPublicBlogsByAuthor:

@@ -1,23 +1,36 @@
-from src.application.dto import BlogResponseDTO, PublicBlogResponseDTO, PaginationDTO, PaginationResponseDTO
-from src.application.repositories import IBlogRepository
+from src.application.dto import BasicUserDTO, BlogResponseDTO, PublicBlogResponseDTO, PaginationDTO, PaginationResponseDTO
+from src.application.repositories import IBlogRepository, IUserRepository
 from src.domain.entities import UserEntity
 from src.domain.value_objects import BlogStatus
 
 class GetBlogUseCase:
-  def __init__(self, blog_repository: IBlogRepository):
+  def __init__(
+    self,
+    blog_repository: IBlogRepository,
+    user_repository: IUserRepository | None = None,
+  ):
     self.blog_repository = blog_repository
+    self.user_repository = user_repository
 
   async def get_public_by_id(self, blog_id: str) -> PublicBlogResponseDTO | None:
     """Get the public-facing view of a published blog.
 
     Returns the published snapshot (published_title/published_content) for published blogs.
     Returns None if the blog is missing OR is still a draft (not yet published).
+    Includes the author when a user_repository was provided.
     """
     blog = await self.blog_repository.get_blog_by_id(blog_id)
     if not blog or blog.status != BlogStatus.PUBLISHED:
       return None
 
-    return PublicBlogResponseDTO.model_validate(self._apply_published_snapshot(blog.to_dict()))
+    blog_dict = self._apply_published_snapshot(blog.to_dict())
+
+    if self.user_repository is not None:
+      author = await self.user_repository.get_user_by_id(blog.author_id)
+      if author is not None:
+        blog_dict["author"] = BasicUserDTO.model_validate(author.to_dict())
+
+    return PublicBlogResponseDTO.model_validate(blog_dict)
 
   async def get_owner_by_id(self, current_user: UserEntity, blog_id: str) -> BlogResponseDTO | None:
     """Get a single blog (any status) owned by the current user, with raw draft fields.

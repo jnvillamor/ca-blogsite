@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..dependencies import get_current_user
 from app.database.db import get_db
 from app.database.unit_of_work import get_uow
-from app.repositories import BlogRepository
+from app.repositories import BlogRepository, UserRepository
 from app.services import UuidGenerator
 from src.application.dto import (
   CreateBlogDTO,
@@ -161,7 +161,8 @@ async def get_public_blog(
 ):
   logger.info(f"Fetching public view of blog with id: {blog_id}")
   blog_repository = BlogRepository(session)
-  use_case = GetBlogUseCase(blog_repository)
+  user_repository = UserRepository(session)
+  use_case = GetBlogUseCase(blog_repository, user_repository)
   blog = await use_case.get_public_by_id(blog_id)
   if blog is None:
     logger.warning(f"Public blog with id: {blog_id} not found or not published.")

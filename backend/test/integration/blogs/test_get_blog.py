@@ -2,10 +2,29 @@ import pytest
 from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.models import BlogModel
+from app.database.models import BlogModel, UserModel
 from app.repositories import BlogRepository
 from src.application.use_cases.blogs import GetBlogUseCase
 from src.application.dto import PaginationDTO, PaginationResponseDTO, PublicBlogResponseDTO
+from src.domain.entities import UserEntity
+
+
+def _user_model_to_entity(user: UserModel) -> UserEntity:
+  """Build a UserEntity from a UserModel for use as `current_user`.
+
+  The owner-facing methods (get_owner_by_id, get_all_blogs_for_owner) require
+  a UserEntity. The integration fixture returns a UserModel, so we adapt.
+  """
+  return UserEntity(
+    id=user.id,
+    first_name=user.first_name,
+    last_name=user.last_name,
+    username=user.username,
+    password=user.password,
+    avatar=user.avatar,
+    created_at=user.created_at,
+    updated_at=user.updated_at,
+  )
 
 
 @pytest.fixture
@@ -17,7 +36,7 @@ def get_blog_use_case(db_session: AsyncSession) -> GetBlogUseCase:
 class TestGetBlogUseCase:
 
   @pytest.mark.asyncio
-  async def test_get_by_id_existing_blog(
+  async def test_get_owner_by_id_existing_blog(
     self,
     get_blog_use_case: GetBlogUseCase,
     create_test_user,
@@ -25,8 +44,9 @@ class TestGetBlogUseCase:
   ):
     test_user = await create_test_user()
     test_blog = await create_test_blog(author_id=test_user.id)
+    current_user = _user_model_to_entity(test_user)
 
-    result = await get_blog_use_case.get_by_id(test_blog.id)
+    result = await get_blog_use_case.get_owner_by_id(current_user, test_blog.id)
 
     assert result is not None
     assert result.id == test_blog.id
@@ -37,11 +57,15 @@ class TestGetBlogUseCase:
 
 
   @pytest.mark.asyncio
-  async def test_get_by_id_non_existing_blog(
+  async def test_get_owner_by_id_non_existing_blog(
     self,
-    get_blog_use_case: GetBlogUseCase
+    get_blog_use_case: GetBlogUseCase,
+    create_test_user
   ):
-    result = await get_blog_use_case.get_by_id("non-existing-id")
+    test_user = await create_test_user()
+    current_user = _user_model_to_entity(test_user)
+
+    result = await get_blog_use_case.get_owner_by_id(current_user, "non-existing-id")
 
     assert result is None
 
@@ -59,7 +83,7 @@ class TestGetBlogUseCase:
       (PaginationDTO(skip=0, limit=5, search="Test Blog Title"), 15, 5)
     ]
   )
-  async def test_get_all_blogs(
+  async def test_get_all_blogs_for_owner(
     self,
     get_blog_use_case: GetBlogUseCase,
     create_test_user,
@@ -69,6 +93,7 @@ class TestGetBlogUseCase:
     item_count: int
   ):
     test_user = await create_test_user()
+    current_user = _user_model_to_entity(test_user)
 
     for i in range(15):
       await create_test_blog(
@@ -79,19 +104,22 @@ class TestGetBlogUseCase:
         hero_image=f"https://example.com/hero-image-{i}.png"
       )
 
-    result: PaginationResponseDTO = await get_blog_use_case.get_all_blogs(pagination)
+    result: PaginationResponseDTO = await get_blog_use_case.get_all_blogs_for_owner(
+      current_user, pagination
+    )
 
     assert result.total == expected_count
     assert len(result.items) == item_count
 
 
   @pytest.mark.asyncio
-  async def test_get_all_blogs_by_author(
+  async def test_get_all_blogs_for_owner_filters_by_author(
     self,
     get_blog_use_case: GetBlogUseCase,
     create_test_user,
     create_test_blog,
   ):
+    target_user = None
     for i in range(5):
       test_user = await create_test_user(
         id=f"test-user-id-{i}",
@@ -99,6 +127,8 @@ class TestGetBlogUseCase:
         last_name="User",
         username=f"testuser{i}"
       )
+      if i == 2:
+        target_user = test_user
 
       for j in range(3):
         await create_test_blog(
@@ -109,8 +139,10 @@ class TestGetBlogUseCase:
           hero_image=f"https://example.com/hero-image-{i}-{j}.png"
         )
 
+    current_user = _user_model_to_entity(target_user)
+
     pagination = PaginationDTO(skip=0, limit=10)
-    result = await get_blog_use_case.get_all_blogs_by_author("test-user-id-2", pagination)
+    result = await get_blog_use_case.get_all_blogs_for_owner(current_user, pagination)
 
     assert result.total == 3
     assert len(result.items) == 3
@@ -119,9 +151,8 @@ class TestGetBlogUseCase:
       assert blog.author_id == "test-user-id-2"
 
     pagination_with_search = PaginationDTO(skip=0, limit=10, search="Test Blog Title 2-1")
-    result_with_search = await get_blog_use_case.get_all_blogs_by_author(
-      "test-user-id-2",
-      pagination_with_search
+    result_with_search = await get_blog_use_case.get_all_blogs_for_owner(
+      current_user, pagination_with_search
     )
 
     assert result_with_search.total == 1

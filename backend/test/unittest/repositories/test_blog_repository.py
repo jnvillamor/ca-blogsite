@@ -37,7 +37,7 @@ class TestBlogRepository:
 
 
   @pytest.mark.asyncio
-  async def test_get_all_blogs(self, db_session: AsyncSession):
+  async def test_get_all_public_blogs(self, db_session: AsyncSession):
     repo = BlogRepository(db_session)
 
     for i in range(15):
@@ -46,25 +46,29 @@ class TestBlogRepository:
         title=f"Blog {i}",
         content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Content", "styles": {}}], "children": []}],
         author_id="user123",
+        status="published",
+        published_title=f"Blog {i}",
+        published_content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Content", "styles": {}}], "children": []}],
+        published_at=datetime(2024, 6, 1, tzinfo=timezone.utc),
         created_at=datetime(2024,1,1,tzinfo=timezone.utc),
         updated_at=datetime(2024,1,1,tzinfo=timezone.utc)
       )
       await repo.create_blog(blog)
 
-    blogs, total = await repo.get_all_blogs(skip=0, limit=10)
+    blogs, total = await repo.get_all_public_blogs(skip=0, limit=10)
 
     assert total == 15
     assert len(blogs) == 10
     assert blogs[0].id == "blog0"
     assert blogs[9].id == "blog9"
 
-    blogs_page_2, _ = await repo.get_all_blogs(skip=10, limit=10)
+    blogs_page_2, _ = await repo.get_all_public_blogs(skip=10, limit=10)
 
     assert len(blogs_page_2) == 5
     assert blogs_page_2[0].id == "blog10"
     assert blogs_page_2[4].id == "blog14"
 
-    blogs_search, total_search = await repo.get_all_blogs(search="Blog 1")
+    blogs_search, total_search = await repo.get_all_public_blogs(search="Blog 1")
 
     assert total_search == 6
     assert len(blogs_search) == 6
@@ -106,7 +110,7 @@ class TestBlogRepository:
 
 
   @pytest.mark.asyncio
-  async def test_get_all_blogs_with_search(self, db_session: AsyncSession):
+  async def test_get_all_public_blogs_with_search(self, db_session: AsyncSession):
     repo = BlogRepository(db_session)
 
     for i in range(10):
@@ -115,17 +119,21 @@ class TestBlogRepository:
         title=f"Test Blog {i}",
         content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Content", "styles": {}}], "children": []}],
         author_id="user123",
+        status="published",
+        published_title=f"Test Blog {i}",
+        published_content=[{"id": "1", "type": "paragraph", "props": {"textColor": "default", "backgroundColor": "default", "textAlignment": "left"}, "content": [{"type": "text", "text": "Content", "styles": {}}], "children": []}],
+        published_at=datetime(2024, 6, 1, tzinfo=timezone.utc),
         created_at=datetime(2024,1,1,tzinfo=timezone.utc),
         updated_at=datetime(2024,1,1,tzinfo=timezone.utc)
       )
       await repo.create_blog(blog)
 
-    blogs_search, total_search = await repo.get_all_blogs(search="Test Blog 1")
+    blogs_search, total_search = await repo.get_all_public_blogs(search="Test Blog 1")
 
     assert total_search == 1
     assert blogs_search[0].id == "blog1"
 
-    blogs_search, total_search = await repo.get_all_blogs(search="Test Blog")
+    blogs_search, total_search = await repo.get_all_public_blogs(search="Test Blog")
 
     assert total_search == 10
 

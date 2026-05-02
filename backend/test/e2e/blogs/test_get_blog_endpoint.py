@@ -172,7 +172,7 @@ class TestGetPublicBlogsByAuthorEndpoint:
     client,
     public_blogs_for_author,
   ):
-    response = await client.get("/v1/blogs/author/user1/public")
+    response = await client.get("/v1/blogs/author/user1")
 
     assert response.status_code == 200
     data = response.json()
@@ -189,7 +189,7 @@ class TestGetPublicBlogsByAuthorEndpoint:
     client,
     public_blogs_for_author,
   ):
-    response = await client.get("/v1/blogs/author/user1/public")
+    response = await client.get("/v1/blogs/author/user1")
 
     assert response.status_code == 200
     data = response.json()
@@ -209,7 +209,7 @@ class TestGetPublicBlogsByAuthorEndpoint:
   ):
     """Regression guard: a blog whose status is 'draft' but has a non-null
     published_at MUST be included (published-then-edited case)."""
-    response = await client.get("/v1/blogs/author/user1/public")
+    response = await client.get("/v1/blogs/author/user1")
 
     assert response.status_code == 200
     data = response.json()
@@ -227,7 +227,7 @@ class TestGetPublicBlogsByAuthorEndpoint:
     client,
     public_blogs_for_author,
   ):
-    response = await client.get("/v1/blogs/author/user1/public")
+    response = await client.get("/v1/blogs/author/user1")
 
     assert response.status_code == 200
     data = response.json()
@@ -251,7 +251,7 @@ class TestGetPublicBlogsByAuthorEndpoint:
     client,
     public_blogs_for_author,
   ):
-    response = await client.get("/v1/blogs/author/user1/public?skip=0&limit=2")
+    response = await client.get("/v1/blogs/author/user1?skip=0&limit=2")
 
     assert response.status_code == 200
     data = response.json()
@@ -260,7 +260,7 @@ class TestGetPublicBlogsByAuthorEndpoint:
     assert data["skip"] == 0
     assert data["limit"] == 2
 
-    response_page_2 = await client.get("/v1/blogs/author/user1/public?skip=2&limit=2")
+    response_page_2 = await client.get("/v1/blogs/author/user1?skip=2&limit=2")
     assert response_page_2.status_code == 200
     data_page_2 = response_page_2.json()
     assert data_page_2["total"] == 3
@@ -276,7 +276,7 @@ class TestGetPublicBlogsByAuthorEndpoint:
     # Search hits the draft title column. Only 'Pub A draft title' and 'Pub B draft title'
     # contain "Pub" — 'edited-after-pub' has draft title "Edited Draft Title" which does
     # not match.
-    response = await client.get("/v1/blogs/author/user1/public?search=Pub")
+    response = await client.get("/v1/blogs/author/user1?search=Pub")
 
     assert response.status_code == 200
     data = response.json()
@@ -292,7 +292,7 @@ class TestGetPublicBlogsByAuthorEndpoint:
     public_blogs_for_author,
   ):
     # user3 exists (from EXISTING_USERS) but has no blogs at all.
-    response = await client.get("/v1/blogs/author/user3/public")
+    response = await client.get("/v1/blogs/author/user3")
 
     assert response.status_code == 200
     data = response.json()
@@ -307,7 +307,7 @@ class TestGetPublicBlogsByAuthorEndpoint:
     public_blogs_for_author,
   ):
     """The endpoint is registered with a trailing-slash alias (include_in_schema=False)."""
-    response = await client.get("/v1/blogs/author/user1/public/")
+    response = await client.get("/v1/blogs/author/user1/")
 
     assert response.status_code == 200
     data = response.json()

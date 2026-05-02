@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Any, Optional
+from src.domain.exceptions import InvalidDataException
 from src.domain.value_objects import Title, Content, BlogStatus
 
 class BlogEntity:
@@ -117,6 +118,18 @@ class BlogEntity:
     self.__published_title = self.__title.value
     self.__published_content = self.__content.value
     self.__published_at = datetime.now()
+    self.__updated_at = datetime.now()
+
+  def unpublish(self) -> None:
+    """Revert a published blog back to draft so it's no longer publicly visible.
+
+    The published snapshot is retained so a future re-publish can be compared
+    against the previous version — only the status flag changes.
+    """
+    if self.__status.value != BlogStatus.PUBLISHED:
+      raise InvalidDataException("Only published blogs can be unpublished.")
+    self.__status = BlogStatus(BlogStatus.DRAFT)
+    self.__published_at = None
     self.__updated_at = datetime.now()
 
   def to_dict(self) -> dict:

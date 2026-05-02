@@ -21,7 +21,8 @@ from src.application.use_cases.blogs import (
   GetBlogUseCase,
   UpdateBlogUseCase,
   DeleteBlogUseCase,
-  PublishBlogUseCase
+  PublishBlogUseCase,
+  UnpublishBlogUseCase
 )
 from src.domain.entities import UserEntity
 
@@ -138,6 +139,36 @@ async def publish_blog(
   published_blog = await use_case.execute(current_user, blog_id)
   logger.info(f"Blog published: {published_blog.title} (id: {published_blog.id})")
   return published_blog
+
+@router.post(
+  "/{blog_id}/unpublish",
+  status_code=status.HTTP_200_OK,
+  response_model=BlogResponseDTO,
+  response_model_exclude_none=True,
+  responses={
+    200: {"description": "Blog unpublished successfully."},
+    400: {"description": "Blog is not currently published."},
+    404: {"description": "Blog not found."},
+    403: {"description": "Not authorized to unpublish this blog."},
+    500: {"description": "Internal Server Error."}
+  }
+)
+@router.post(
+  "/{blog_id}/unpublish/",
+  include_in_schema=False
+)
+async def unpublish_blog(
+  request: Request,
+  blog_id: str,
+  session: AsyncSession = Depends(get_db),
+  current_user: UserEntity = Depends(get_current_user)
+):
+  logger.info(f"Unpublishing blog with id: {blog_id}")
+  unit_of_work = get_uow(session)
+  use_case = UnpublishBlogUseCase(unit_of_work)
+  unpublished_blog = await use_case.execute(current_user, blog_id)
+  logger.info(f"Blog unpublished: {unpublished_blog.title} (id: {unpublished_blog.id})")
+  return unpublished_blog
 
 @router.get(
   "/{blog_id}",

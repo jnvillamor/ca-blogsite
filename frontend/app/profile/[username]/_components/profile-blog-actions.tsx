@@ -1,6 +1,13 @@
 import { Button } from '@/common/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/common/components/ui/dropdown-menu'
 import Link from 'next/link'
-import { Eye, Trash2 } from 'lucide-react'
+import { Eye, MoreVertical, Trash2 } from 'lucide-react'
 
 type ProfileBlogActionsProps = {
   blogId: string
@@ -9,24 +16,38 @@ type ProfileBlogActionsProps = {
 
 const ProfileBlogActions = ({ blogId, isOwner }: ProfileBlogActionsProps) => {
   return (
-    <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-end">
-      <Button variant="ghost" size="sm" asChild className="gap-2">
-        <Link href={`/blogs/${blogId}`}>
-          <Eye className="h-4 w-4" />
-          <span className="hidden sm:inline">View</span>
-        </Link>
-      </Button>
-      {isOwner && (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          size="sm"
-          className="gap-2 text-destructive hover:text-destructive cursor-pointer"
+          size="icon"
+          aria-label="Open blog actions"
+          className="h-8 w-8 cursor-pointer"
         >
-          <Trash2 className="h-4 w-4" />
-          <span className="hidden sm:inline">Delete</span>
+          <MoreVertical className="h-4 w-4" />
         </Button>
-      )}
-    </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem asChild>
+          <Link href={`/blogs/${blogId}`} className="cursor-pointer">
+            <Eye className="h-4 w-4" />
+            View
+          </Link>
+        </DropdownMenuItem>
+        {isOwner && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              variant="destructive"
+              className="cursor-pointer"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 

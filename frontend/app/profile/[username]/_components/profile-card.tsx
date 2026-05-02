@@ -20,7 +20,7 @@ const ProfileCard = ({ user}: { user: UserProfileDTO }) => {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <div className="space-y-1 text-center">
             <p className="text-2xl sm:text-3xl font-bold">
               {user.blog_count.total_blogs}

@@ -19,9 +19,7 @@ const Profile = ({ user, pagination_params, isOwner }: ProfileProps) => {
     <main className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16">
         <ProfileCard user={user} />
-        {isOwner && (
-          <ProfileActionButtons />
-        )}
+        {isOwner && <ProfileActionButtons />}
         <ProfileBlogsList
           user_id={user.id}
           pagination_params={pagination_params}
@@ -62,7 +60,13 @@ const ProfilePage = async ({
     throw new Error(result.error_message)
   }
 
-  return <Profile user={result.data} pagination_params={pagiation_params} isOwner={isOwner}/>
+  return (
+    <Profile
+      user={result.data}
+      pagination_params={pagiation_params}
+      isOwner={isOwner}
+    />
+  )
 }
 
 export default ProfilePage

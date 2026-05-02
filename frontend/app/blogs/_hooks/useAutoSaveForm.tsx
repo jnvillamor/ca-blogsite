@@ -16,10 +16,17 @@ const useAutoSaveForm = <T,>({
   const [status, setStatus] = useState<AutoSaveStatus>("idle")
 
   const last_saved_ref = useRef<string>('')
+  const has_seen_first_value = useRef(false)
   const timeout_ref = useRef<NodeJS.Timeout | null>(null)
 
   const triggerAutosave = useCallback((data: T) => {
       const serialized = JSON.stringify(data)
+
+      if (!has_seen_first_value.current) {
+        has_seen_first_value.current = true
+        last_saved_ref.current = serialized
+        return
+      }
 
       if (serialized === last_saved_ref.current) return
 

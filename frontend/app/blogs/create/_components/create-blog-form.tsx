@@ -20,13 +20,13 @@ const CreateBlogForm = () => {
   const { triggerAutosave, status } = useAutoSaveForm<CreateBlogData>({
     delay: 5000,
     onSave: async (form_data: CreateBlogData) => {
-      try {
-        const serialized_data = CreateBlogSchema.parse(form_data)
-        const response = await createBlog(serialized_data)
-        console.log("Blog created successfully:", response)
-      } catch (error) {
-        console.error("Autosave failed:", error)
+      const serialized_data = CreateBlogSchema.parse(form_data)
+      const response = await createBlog(serialized_data)
+      if (!response.ok) {
+        console.error("Autosave failed:", response.error_message)
+        throw new Error(response.error_message)
       }
+      console.log("Blog created successfully:", response.data)
     },
     storageKey: "create_blog_form_data",
   })

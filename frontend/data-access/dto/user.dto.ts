@@ -21,10 +21,3 @@ export interface UserProfileDTO extends BasicUserDTO {
   updated_at: string;
   blog_count: BlogCountDTO;
 }
-
-export interface ProfileResponse {
-  data?: UserProfileDTO;
-  error: boolean;
-  status_code?: number;
-  error_message?: string;
-}

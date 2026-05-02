@@ -3,6 +3,7 @@
 import { BlockNoteEditor, PartialBlock } from '@blocknote/core'
 import { useCreateBlockNote } from '@blocknote/react'
 import { BlockNoteView } from '@blocknote/mantine'
+import { useTheme } from 'next-themes'
 import '@blocknote/mantine/style.css'
 import '@blocknote/core/fonts/inter.css'
 import '@/styles/blocknote.css'
@@ -50,12 +51,15 @@ const BlockNoteRenderer = ({
   const editor: BlockNoteEditor = useCreateBlockNote({
     initialContent: sanitized && sanitized.length > 0 ? sanitized : undefined,
   })
+  const { resolvedTheme } = useTheme()
+  const theme = resolvedTheme === 'dark' ? 'dark' : 'light'
 
   return (
     <div className={className}>
       <BlockNoteView
         editor={editor}
         editable={editable}
+        theme={theme}
         onChange={
           editable && onChange ? () => onChange(editor.document) : undefined
         }

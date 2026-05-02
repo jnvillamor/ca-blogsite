@@ -1,3 +1,7 @@
+.bn-container[data-color-scheme='light'] {
+  --bn-colors-editor-text: #0f172a;
+}
+
 .bn-editor {
   background: transparent;
 }

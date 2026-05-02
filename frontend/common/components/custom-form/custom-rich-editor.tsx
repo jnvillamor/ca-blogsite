@@ -1,29 +1,21 @@
-"use client"
+'use client'
 
-import { BlockNoteEditor, PartialBlock } from "@blocknote/core"
-import { useCreateBlockNote } from "@blocknote/react"
-import { BlockNoteView } from "@blocknote/mantine"
-import "@blocknote/mantine/style.css"
-import "@blocknote/core/fonts/inter.css"
-import "@/styles/blocknote.css"
-import { useFieldContext } from "@/common/hooks/form"
+import { PartialBlock } from '@blocknote/core'
+import { useFieldContext } from '@/common/hooks/form'
+import BlockNoteRenderer from '@/common/components/blocknote/blocknote-renderer'
 
 type ContentType = PartialBlock[]
 
 const RichTextEditor = () => {
-  const { name, state, handleChange } = useFieldContext<ContentType>()
-
-  const editor: BlockNoteEditor = useCreateBlockNote({
-    initialContent: state.value ? state.value : undefined,
-  })
+  const { state, handleChange } = useFieldContext<ContentType>()
 
   return (
-    <div className="-mx-13.5">
-      <BlockNoteView
-        editor={editor}
-        onChange={() => handleChange(editor.document)}
-      />
-    </div>
+    <BlockNoteRenderer
+      initialContent={state.value}
+      editable
+      onChange={handleChange}
+      className="-mx-13.5"
+    />
   )
 }
 

@@ -3,10 +3,9 @@
 import { PaginationParamsDTO } from '@/data-access/dto/common.dto'
 import { useProfileBlogs } from '../_hooks/use-profile-blogs'
 import { Card, CardContent } from '@/common/components/ui/card'
-import { Button } from '@/common/components/ui/button'
-import Link from 'next/link'
 import ProfileBlogItem from './profile-blog-item'
 import ProfileBlogActions from './profile-blog-actions'
+import NewBlogButton from './new-blog-button'
 
 type ProfileBlogsListProps = {
   user_id: string
@@ -63,11 +62,7 @@ const ProfileBlogsEmptyState = ({ isOwner }: { isOwner?: boolean }) => (
           ? "You haven't written any blogs yet."
           : 'This user has not published any blogs yet.'}
       </p>
-      {isOwner && (
-        <Button asChild>
-          <Link href="/blogs/new">Write Your First Blog</Link>
-        </Button>
-      )}
+      {isOwner && <NewBlogButton>Write Your First Blog</NewBlogButton>}
     </CardContent>
   </Card>
 )

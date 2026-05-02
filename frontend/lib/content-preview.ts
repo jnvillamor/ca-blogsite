@@ -7,10 +7,10 @@ import { BlockNoteContent } from "@/data-access/schemas/blogs.schema";
  * Extract text from a single BlockNote block
  */
 const extractTextFromBlock = (block: BlockNoteContent): string => {
-  if (!block.content) return '';
+  if (!block.content || !Array.isArray(block.content)) return '';
 
   return block.content
-    .filter((item) => item.type === 'text' && item.text)
+    .filter((item) => item.type === 'text' && typeof item.text === 'string')
     .map((item) => item.text)
     .join('')
 }

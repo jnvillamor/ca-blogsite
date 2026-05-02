@@ -1,13 +1,9 @@
-import { Button } from '@/common/components/ui/button'
-import Link from 'next/link'
-import React from 'react'
+import NewBlogButton from './new-blog-button'
 
 const ProfileActionButtons = () => {
   return (
     <div className="flex flex-col sm:flex-row gap-3 mb-8">
-      <Button asChild className='gap-2'>
-        <Link href='/blogs/new'>Write New Blog</Link>
-      </Button>
+      <NewBlogButton className="gap-2">Write New Blog</NewBlogButton>
     </div>
   )
 }

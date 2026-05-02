@@ -23,11 +23,11 @@ export const useBlogEditor = ({ blogId, delay = 5000 }: UseBlogEditorOptions) =>
     [blogId],
   )
 
-  const { triggerAutosave, status } = useAutoSaveForm<UpdateBlogData>({
+  const { triggerAutosave, status, isDirty, flush } = useAutoSaveForm<UpdateBlogData>({
     delay,
     onSave,
     storageKey: `blog_draft_${blogId}`,
   })
 
-  return { triggerAutosave, status }
+  return { triggerAutosave, status, isDirty, flush }
 }

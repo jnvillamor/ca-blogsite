@@ -1,6 +1,8 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { Button } from '@/common/components/ui/button'
 import { Eye, Globe2, Send } from 'lucide-react'
 import { usePublishBlog } from '../../_hooks/use-publish-blog'
@@ -11,6 +13,8 @@ type EditActionBarProps = {
   blogId: string
   status: 'draft' | 'published'
   autosaveStatus: AutosaveStatus
+  isDirty: boolean
+  flush: () => Promise<void>
 }
 
 const autosaveLabel: Record<AutosaveStatus, string> = {
@@ -20,9 +24,31 @@ const autosaveLabel: Record<AutosaveStatus, string> = {
   error: 'Save failed',
 }
 
-const EditActionBar = ({ blogId, status, autosaveStatus }: EditActionBarProps) => {
+const EditActionBar = ({
+  blogId,
+  status,
+  autosaveStatus,
+  isDirty,
+  flush,
+}: EditActionBarProps) => {
+  const router = useRouter()
+  const [previewing, setPreviewing] = useState(false)
   const { publish, status: publishStatus, error } = usePublishBlog(blogId)
   const isPublished = status === 'published'
+
+  const handlePreview = async () => {
+    setPreviewing(true)
+    try {
+      if (isDirty) {
+        await flush()
+      }
+      router.push(`/blogs/${blogId}?mode=preview`)
+    } catch {
+      // save failed; autosave status indicator already reflects the error
+    } finally {
+      setPreviewing(false)
+    }
+  }
 
   return (
     <div className="sticky top-4 z-20 flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-background/80 backdrop-blur px-4 py-3 mb-6 shadow-sm">
@@ -43,11 +69,15 @@ const EditActionBar = ({ blogId, status, autosaveStatus }: EditActionBarProps) =
             {error}
           </span>
         )}
-        <Button asChild variant="ghost" size="sm" className="gap-2">
-          <Link href={`/blogs/${blogId}?mode=preview`}>
-            <Eye className="h-4 w-4" />
-            Preview
-          </Link>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="gap-2"
+          onClick={handlePreview}
+          disabled={previewing}
+        >
+          <Eye className="h-4 w-4" />
+          {previewing ? 'Saving…' : 'Preview'}
         </Button>
         {isPublished && (
           <Button asChild variant="ghost" size="sm" className="gap-2">

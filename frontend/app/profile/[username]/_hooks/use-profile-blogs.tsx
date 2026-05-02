@@ -67,28 +67,30 @@ export const useProfileBlogs = (
 const fetchOwnerBlogs = async (
   pagination_params?: PaginationParamsDTO,
 ): Promise<ProfileBlogsResult> => {
-  const data = await getMyBlogs(pagination_params)
-  const items: ProfileBlogItem[] = data.items.map((blog) => ({
+  const response = await getMyBlogs(pagination_params)
+  if (!response.ok) throw new Error(response.error_message)
+  const items: ProfileBlogItem[] = response.data.items.map((blog) => ({
     id: blog.id,
     title: blog.title,
     content: blog.content,
     status: blog.status,
     created_at: blog.created_at,
   }))
-  return { items, total: data.total }
+  return { items, total: response.data.total }
 }
 
 const fetchPublicBlogs = async (
   user_id: string,
   pagination_params?: PaginationParamsDTO,
 ): Promise<ProfileBlogsResult> => {
-  const data = await getPublicBlogsByAuthor(user_id, pagination_params)
-  const items: ProfileBlogItem[] = data.items.map((blog) => ({
+  const response = await getPublicBlogsByAuthor(user_id, pagination_params)
+  if (!response.ok) throw new Error(response.error_message)
+  const items: ProfileBlogItem[] = response.data.items.map((blog) => ({
     id: blog.id,
     title: blog.title,
     content: blog.content,
     status: blog.status,
     created_at: blog.created_at,
   }))
-  return { items, total: data.total }
+  return { items, total: response.data.total }
 }

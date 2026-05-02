@@ -55,20 +55,14 @@ const ProfilePage = async ({
   }
   const isOwner = session?.user?.username === username
 
-  const { data, error, status_code, error_message } = await getUserProfile(
-    username,
-    query,
-  )
+  const result = await getUserProfile(username, query)
 
-  if (error && status_code === 404) {
-    return notFound()
+  if (!result.ok) {
+    if (result.status_code === 404) return notFound()
+    throw new Error(result.error_message)
   }
 
-  if (error || !data) {
-    throw new Error(error_message || 'Failed to load user profile')
-  }
-
-  return <Profile user={data} pagination_params={pagiation_params} isOwner={isOwner}/>
+  return <Profile user={result.data} pagination_params={pagiation_params} isOwner={isOwner}/>
 }
 
 export default ProfilePage

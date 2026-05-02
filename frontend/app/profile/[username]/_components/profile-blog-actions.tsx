@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import Link from 'next/link'
-import { Eye, MoreVertical, Trash2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { Eye, MoreVertical, Send, Trash2, Undo2 } from 'lucide-react'
 import { Button } from '@/common/components/ui/button'
 import {
   DropdownMenu,
@@ -11,15 +13,39 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/common/components/ui/dropdown-menu'
+import { publishBlog, unpublishBlog } from '@/data-access/blogs.data-access'
 import DeleteBlogDialog from './profile-delete-blog-dialog'
 
 type ProfileBlogActionsProps = {
   blogId: string
+  status: 'draft' | 'published'
   isOwner?: boolean
 }
 
-const ProfileBlogActions = ({ blogId, isOwner }: ProfileBlogActionsProps) => {
+const ProfileBlogActions = ({
+  blogId,
+  status,
+  isOwner,
+}: ProfileBlogActionsProps) => {
+  const router = useRouter()
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [isToggling, startToggleTransition] = useTransition()
+
+  const isPublished = status === 'published'
+
+  const handleToggleStatus = () => {
+    startToggleTransition(async () => {
+      const response = isPublished
+        ? await unpublishBlog(blogId)
+        : await publishBlog(blogId)
+      if (!response.ok) {
+        toast.error(response.error_message)
+        return
+      }
+      toast.success(isPublished ? 'Blog unpublished' : 'Blog published')
+      router.refresh()
+    })
+  }
 
   return (
     <>
@@ -41,6 +67,29 @@ const ProfileBlogActions = ({ blogId, isOwner }: ProfileBlogActionsProps) => {
               View
             </Link>
           </DropdownMenuItem>
+          {isOwner && (
+            <DropdownMenuItem
+              className="cursor-pointer"
+              disabled={isToggling}
+              onSelect={(e) => {
+                e.preventDefault()
+                handleToggleStatus()
+              }}
+            >
+              {isPublished ? (
+                <Undo2 className="h-4 w-4" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              {isToggling
+                ? isPublished
+                  ? 'Unpublishing…'
+                  : 'Publishing…'
+                : isPublished
+                  ? 'Unpublish'
+                  : 'Publish'}
+            </DropdownMenuItem>
+          )}
           {isOwner && (
             <>
               <DropdownMenuSeparator />

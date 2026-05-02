@@ -137,6 +137,19 @@ export const publishBlog = async (
   )
 }
 
+export const unpublishBlog = async (
+  id: string,
+): Promise<ApiResult<BlogResponseDTO>> => {
+  const session = await getServerSession(authConfig)
+  if (!session) return unauthenticated<BlogResponseDTO>()
+
+  return apiFetch<BlogResponseDTO>(
+    `${BLOGS_URL}/${id}/unpublish`,
+    { method: 'POST', headers: authHeaders(session.access_token) },
+    'Failed to unpublish blog',
+  )
+}
+
 export const deleteBlog = async (id: string): Promise<ApiResult<null>> => {
   const session = await getServerSession(authConfig)
   if (!session) return unauthenticated<null>()

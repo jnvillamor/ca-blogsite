@@ -46,7 +46,11 @@ const ProfileBlogsList = ({
           status={blog.status}
           created_at={blog.created_at}
           actions={
-            <ProfileBlogActions blogId={blog.id} isOwner={isOwner} />
+            <ProfileBlogActions
+              blogId={blog.id}
+              status={blog.status}
+              isOwner={isOwner}
+            />
           }
         />
       ))}

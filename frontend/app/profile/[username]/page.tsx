@@ -18,7 +18,7 @@ const Profile = ({ user, pagination_params, isOwner }: ProfileProps) => {
   return (
     <main className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16">
-        <ProfileCard user={user} />
+        <ProfileCard user={user} isOwner={isOwner} />
         {isOwner && <ProfileActionButtons />}
         <ProfileBlogsList
           user_id={user.id}

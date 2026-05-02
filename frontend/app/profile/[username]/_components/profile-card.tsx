@@ -2,7 +2,12 @@ import { Card, CardContent, CardHeader } from '@/common/components/ui/card'
 import { UserProfileDTO } from '@/data-access/dto/user.dto'
 import React from 'react'
 
-const ProfileCard = ({ user}: { user: UserProfileDTO }) => {
+type ProfileCardProps = {
+  user: UserProfileDTO
+  isOwner?: boolean
+}
+
+const ProfileCard = ({ user, isOwner }: ProfileCardProps) => {
   return (
     <Card className='mb-12'>
       <CardHeader>
@@ -20,39 +25,43 @@ const ProfileCard = ({ user}: { user: UserProfileDTO }) => {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-3 gap-4">
-          <div className="space-y-1 text-center">
-            <p className="text-2xl sm:text-3xl font-bold">
-              {user.blog_count.total_blogs}
-            </p>
-            <p className="text-xs sm:text-sm text-muted-foreground">
-              Total Blogs
-            </p>
-          </div>
+        <div className={isOwner ? 'grid grid-cols-3 gap-4' : 'grid grid-cols-1 gap-4'}>
+          {isOwner && (
+            <div className="space-y-1 text-center">
+              <p className="text-2xl sm:text-3xl font-bold">
+                {user.blog_count.total_blogs}
+              </p>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Total Blogs
+              </p>
+            </div>
+          )}
 
 
           <div className="space-y-1 text-center">
             <p className="text-2xl sm:text-3xl font-bold">
-              {user.blog_count.published_blogs} 
+              {user.blog_count.published_blogs}
             </p>
             <p className="text-xs sm:text-sm text-muted-foreground">
-              Published 
+              Published
             </p>
           </div>
 
 
-          <div className="space-y-1 text-center">
-            <p className="text-2xl sm:text-3xl font-bold">
-              {user.blog_count.draft_blogs}
-            </p>
-            <p className="text-xs sm:text-sm text-muted-foreground">
-              Drafts 
-            </p>
-          </div>
+          {isOwner && (
+            <div className="space-y-1 text-center">
+              <p className="text-2xl sm:text-3xl font-bold">
+                {user.blog_count.draft_blogs}
+              </p>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Drafts
+              </p>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
   )
 }
 
-export default ProfileCard 
+export default ProfileCard

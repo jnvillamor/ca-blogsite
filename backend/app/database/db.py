@@ -16,7 +16,9 @@ Base = declarative_base()
 # Create the async engine
 engine = create_async_engine(
   config.DATABASE_URL,
-  echo=config.DB_ECHO
+  echo=config.DB_ECHO,
+  pool_pre_ping=True,
+  pool_recycle=300,
 )
 
 # Session factory
